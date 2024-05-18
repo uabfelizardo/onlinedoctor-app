@@ -1,19 +1,4 @@
 # onlinedoctorapp
-#####################################################################################################################################
-## Este projeto foi desenvolvido no âmbito do trabalho em grupo para a unidade curricular Desenvolvimento de Aplicações Móveis (DAM)
-##			 				
-##                              Aplicação para Consultas Médicas 											
-##                                     Online Doctor
-##                              Felizardo Chaguala - 2302578@estudante.uab.pt
-##                                 Inês Martins - 2302581@estudante.uab.pt
-##                                Ornêlo Kambonga – 2302601@estudante.uab.pt
-##                               Yolanda Marchone - 2302613@estudante.uab.pt
-##
-## Nome app:onlinedoctorapp
-## Platoforma: Flutter
-##
-######################################################################################################################################
-git clone https://github.com/uabfelizardo/onlinedoctor-app.git
 
 A new Flutter project.
 
