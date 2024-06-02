@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 class ScheduleAppointmentDoctor extends StatefulWidget {
   static const String routeName = "/schedule-appointment-doctor";
 
+  const ScheduleAppointmentDoctor({super.key});
+
   @override
   State<ScheduleAppointmentDoctor> createState() =>
       _ScheduleAppointmentDoctorState();
@@ -11,10 +13,8 @@ class ScheduleAppointmentDoctor extends StatefulWidget {
 class _ScheduleAppointmentDoctorState extends State<ScheduleAppointmentDoctor> {
   final formKey = GlobalKey<FormState>();
 
+  // ignore: unused_field
   final _specialty = TextEditingController();
-
-  final _dateTime = TextEditingController();
-  final _doctor = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
