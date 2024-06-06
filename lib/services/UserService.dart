@@ -2,7 +2,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 
 class UserService {
-  static const String baseUrl = 'http://localhost:5000/user'; // URL da sua API
+  // static const String baseUrl = 'http://localhost:5000/user'; //Local
+  static const String baseUrl =
+      'https://api-backend-p76c.onrender.com/user'; //Remote
 
   static Future<List<dynamic>> getUsers() async {
     try {

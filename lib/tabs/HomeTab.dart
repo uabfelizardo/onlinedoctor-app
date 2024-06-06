@@ -2,44 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:onlinedoctorapp/styles/colors.dart';
 import 'package:onlinedoctorapp/styles/styles.dart';
 import 'package:onlinedoctorapp/ui/auth/LoginPage.dart';
-
 import '../services/UserService.dart';
 import '../ui/DoctorDetailsPage.dart';
 import '../ui/ScheduleAppointmentPage.dart';
 import '../ui/UserRegistrationPage.dart';
 import '../ui/DoctorRegistrationPage.dart';
 
-class HomeTab extends StatefulWidget {
-  final void Function() onPressedScheduleCard;
+class HomePage extends StatelessWidget {
+  final String userName;
 
-  const HomeTab({
-    Key? key,
-    required this.onPressedScheduleCard,
-  }) : super(key: key);
-
-  @override
-  _HomeTabState createState() => _HomeTabState();
-}
-
-class _HomeTabState extends State<HomeTab> {
-  late List<dynamic> doctors;
-
-  @override
-  void initState() {
-    super.initState();
-    fetchUsers();
-  }
-
-  Future<void> fetchUsers() async {
-    try {
-      final List<dynamic> fetchedDoctors = await UserService.getUsers();
-      setState(() {
-        doctors = fetchedDoctors;
-      });
-    } catch (error) {
-      print('Error fetching users: $error');
-    }
-  }
+  const HomePage({Key? key, required this.userName}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -56,12 +28,25 @@ class _HomeTabState extends State<HomeTab> {
               decoration: BoxDecoration(
                 color: Colors.purple,
               ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Menu',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 24,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    userName,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
             ),
             ListTile(
@@ -97,6 +82,68 @@ class _HomeTabState extends State<HomeTab> {
           ],
         ),
       ),
+      body: HomeTab(
+        onPressedScheduleCard: () {},
+      ),
+    );
+  }
+}
+
+class HomeTab extends StatefulWidget {
+  final void Function() onPressedScheduleCard;
+
+  const HomeTab({
+    Key? key,
+    required this.onPressedScheduleCard,
+  }) : super(key: key);
+
+  @override
+  _HomeTabState createState() => _HomeTabState();
+}
+
+class _HomeTabState extends State<HomeTab> {
+  late List<dynamic> doctors;
+  late List<dynamic> filteredDoctors;
+  TextEditingController searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    fetchUsers();
+    searchController.addListener(_filterDoctors);
+  }
+
+  Future<void> fetchUsers() async {
+    try {
+      final List<dynamic> fetchedDoctors = await UserService.getUsers();
+      setState(() {
+        doctors = fetchedDoctors;
+        filteredDoctors = fetchedDoctors;
+      });
+    } catch (error) {
+      print('Error fetching users: $error');
+    }
+  }
+
+  void _filterDoctors() {
+    String query = searchController.text.toLowerCase();
+    setState(() {
+      filteredDoctors = doctors.where((doctor) {
+        return doctor['name'].toLowerCase().contains(query);
+      }).toList();
+    });
+  }
+
+  @override
+  void dispose() {
+    searchController.removeListener(_filterDoctors);
+    searchController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
       body: GestureDetector(
         onTap: () => FocusScope.of(context).unfocus(),
         child: Container(
@@ -104,7 +151,7 @@ class _HomeTabState extends State<HomeTab> {
           child: ListView(
             children: [
               SizedBox(height: 20),
-              SearchInput(),
+              SearchInput(controller: searchController),
               SizedBox(height: 20),
               Text(
                 'Top Doctor',
@@ -114,16 +161,17 @@ class _HomeTabState extends State<HomeTab> {
                 ),
               ),
               SizedBox(height: 20),
-              doctors != null
+              filteredDoctors.isNotEmpty
                   ? ListView.builder(
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
-                      itemCount: doctors.length,
+                      itemCount: filteredDoctors.length,
                       itemBuilder: (BuildContext context, int index) {
                         return TopDoctorCard(
-                          img: doctors[index]['name'],
-                          doctorName: doctors[index]['name'],
-                          doctorTitle: doctors[index]['name'],
+                          img: '/onlinedoctor.png',
+                          doctorName: filteredDoctors[index]['name'],
+                          doctorTitle:
+                              filteredDoctors[index]['title'] ?? 'Specialist',
                         );
                       },
                     )
@@ -155,7 +203,7 @@ class TopDoctorCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 20),
       child: InkWell(
         onTap: () {
-          _showOptions(context, doctorName);
+          _showOptions(context, doctorName, doctorTitle);
         },
         child: Row(
           children: [
@@ -218,7 +266,8 @@ class TopDoctorCard extends StatelessWidget {
     );
   }
 
-  void _showOptions(BuildContext context, String doctorName) {
+  void _showOptions(
+      BuildContext context, String doctorName, String doctorTitle) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -238,8 +287,7 @@ class TopDoctorCard extends StatelessWidget {
                       builder: (context) => DoctorDetailsPage(
                         doctorName: doctorName,
                         doctorTitle: doctorTitle,
-                        additionalInfo:
-                            'Additional information goes here.', // Você pode adicionar informações adicionais aqui
+                        additionalInfo: 'Additional information goes here.',
                       ),
                     ),
                   );
@@ -253,8 +301,9 @@ class TopDoctorCard extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>
-                          ScheduleAppointmentPage(), // Navega para a página de agendamento
+                      builder: (context) => ScheduleAppointmentPage(
+                        doctorName: doctorName,
+                      ),
                     ),
                   );
                 },
@@ -264,7 +313,7 @@ class TopDoctorCard extends StatelessWidget {
                 title: Text('Chat with doctor'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Navegar para a página de agendamento
+                  // Navegar para a página de chat com o médico
                 },
               ),
             ],
@@ -276,8 +325,11 @@ class TopDoctorCard extends StatelessWidget {
 }
 
 class SearchInput extends StatelessWidget {
+  final TextEditingController controller;
+
   const SearchInput({
     Key? key,
+    required this.controller,
   }) : super(key: key);
 
   @override
@@ -304,6 +356,7 @@ class SearchInput extends StatelessWidget {
           ),
           Expanded(
             child: TextField(
+              controller: controller,
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: 'Search a doctor or health issue',
@@ -319,72 +372,4 @@ class SearchInput extends StatelessWidget {
       ),
     );
   }
-}
-
-/*
-class UserRegistrationPage extends StatelessWidget {
-  const UserRegistrationPage({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final _formKey = GlobalKey<FormState>();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('User Registration'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            children: [
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Name'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your name';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Email'),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your email';
-                  }
-                  return null;
-                },
-              ),
-              TextFormField(
-                decoration: InputDecoration(labelText: 'Password'),
-                obscureText: true,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter your password';
-                  }
-                  return null;
-                },
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {
-                  if (_formKey.currentState!.validate()) {
-                    // Process data.
-                  }
-                },
-                child: Text('Register'),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-*/
-
-void main() {
-  runApp(MaterialApp(home: HomeTab(onPressedScheduleCard: () {})));
 }

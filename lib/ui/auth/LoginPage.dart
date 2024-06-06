@@ -1,51 +1,52 @@
-import 'package:onlinedoctorapp/services/LoginService.dart'; // Import the API service
-
 import 'package:flutter/material.dart';
-import 'SignupPage.dart'; // Import the SignupPage
+import 'package:onlinedoctorapp/services/LoginService.dart';
+import 'SignupPage.dart';
 import '../HomePage.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 
-class LoginPage extends StatelessWidget {
+class LoginPage extends StatefulWidget {
+  @override
+  _LoginPageState createState() => _LoginPageState();
+}
+
+class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-
-  LoginPage({Key? key}) : super(key: key);
 
   Future<void> login(
       BuildContext context, String email, String password) async {
     try {
-      final userFound = await LoginService.checkUser(email, password);
-      if (userFound) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-        );
-      } else {
-        // Caso contrário, mostre uma mensagem de erro
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Login Failed'),
-            content: const Text('Invalid username or password.'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('OK'),
-              ),
-            ],
-          ),
-        );
+      final user = await LoginService.checkUser(email, password);
+      if (!mounted) return;
 
-        // Depois remover
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const Home()),
-        );
-      }
+      handleLoginResult(context, user);
     } catch (error) {
       print('Error during login: $error');
-      // Trate qualquer erro que ocorra durante o login
+    }
+  }
+
+  void handleLoginResult(BuildContext context, Map<String, dynamic>? user) {
+    if (user != null && user.containsKey('name')) {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              HomePage(userName: user['name'], userType: 'doctor'),
+        ),
+      );
+    } else {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Login Failed'),
+          content: const Text('Invalid username or password.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
@@ -117,7 +118,6 @@ class LoginPage extends StatelessWidget {
         const SizedBox(height: 10),
         ElevatedButton(
           onPressed: () {
-            print(_emailController.text + " - " + _passwordController.text);
             login(context, _emailController.text, _passwordController.text);
           },
           style: ElevatedButton.styleFrom(

@@ -50,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   width: 2.0,
                 ),
                 image: DecorationImage(
-                  image: AssetImage('onlinedoctor.png'),
+                  image: AssetImage('/onlinedoctor.png'),
                   fit: BoxFit.cover,
                 ),
               ),

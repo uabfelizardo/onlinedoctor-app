@@ -2,10 +2,12 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class LoginService {
+  // static const String baseUrl = 'http://localhost:5000'; //Local
   static const String baseUrl =
-      'http://localhost:5000'; // Altere para a URL da sua API
+      'https://api-backend-p76c.onrender.com'; //Remote
 
-  static Future<bool> checkUser(String email, String password) async {
+  static Future<Map<String, dynamic>?> checkUser(
+      String email, String password) async {
     try {
       final url = Uri.parse('$baseUrl/login');
 
@@ -14,21 +16,20 @@ class LoginService {
         body: jsonEncode({'email': email, 'password': password}),
         headers: {'Content-Type': 'application/json'},
       );
-      print("object " + email.toString());
+
+      print("Request sent with email: $email");
 
       if (response.statusCode == 200) {
-        // Se a resposta da API for bem-sucedida, verifique se o usuário foi encontrado
-        final responseData = jsonDecode(response.body);
-        final bool userFound = responseData['userFound'];
-        return userFound;
+        final responseData = jsonDecode(response.body) as Map<String, dynamic>;
+        return responseData; // Retorne os dados do usuário
+      } else if (response.statusCode == 401) {
+        return null; // Indique falha na autenticação
       } else {
-        // Se a resposta da API não for bem-sucedida, lance uma exceção
         throw Exception('Failed to authenticate user: ${response.statusCode}');
       }
     } catch (error) {
-      // Trate qualquer erro que ocorra durante a chamada da API
       print('Error during API call: $error');
-      return false; // Retorne false em caso de erro
+      return null;
     }
   }
 }

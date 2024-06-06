@@ -27,7 +27,10 @@ class _SignupPageState extends State<SignupPage> {
   DateTime _currentDtaeTime = DateTime.now();
 
   Future<void> saveUser() async {
-    final url = Uri.parse('http://localhost:5000/user');
+    // final url = Uri.parse('http://localhost:5000/user'); //Local
+    final url =
+        Uri.parse('https://api-backend-p76c.onrender.com/user'); //Remote
+
     _currentDtaeTime = DateTime.now();
 
     final response = await http.post(

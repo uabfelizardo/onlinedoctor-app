@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Adicione esta linha para formatação de datas
+import 'package:intl/intl.dart';
+import 'ScheduleAppointmentPage.dart';
 
 class DoctorDetailsPage extends StatelessWidget {
   final String doctorName;
@@ -19,12 +20,12 @@ class DoctorDetailsPage extends StatelessWidget {
         title: Text(
           'Doctor information',
           style: TextStyle(
-            color: Colors.white, // Cor do texto do título da barra de navegação
-            fontSize: 24, // Tamanho da fonte do título da barra de navegação
+            color: Colors.white,
+            fontSize: 24,
           ),
         ),
-        backgroundColor: Colors.purple, // Cor de fundo da barra de navegação
-        iconTheme: IconThemeData(color: Colors.white), // Cor do ícone de volta
+        backgroundColor: Colors.purple,
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       body: SingleChildScrollView(
         child: Container(
@@ -46,12 +47,10 @@ class DoctorDetailsPage extends StatelessWidget {
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(
-                      height: 20,
-                    ),
+                    const SizedBox(height: 20),
                     Container(
-                      width: 200, // Definindo a largura da imagem
-                      height: 200, // Definindo a altura da imagem
+                      width: 200,
+                      height: 200,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
@@ -62,9 +61,8 @@ class DoctorDetailsPage extends StatelessWidget {
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(100),
                         child: Image.asset(
-                          '/onlinedoctor.png', // Caminho da imagem
-                          fit: BoxFit
-                              .cover, // Ajusta a imagem para preencher o container
+                          '/onlinedoctor.png',
+                          fit: BoxFit.cover,
                         ),
                       ),
                     )
@@ -107,7 +105,7 @@ class DoctorDetailsPage extends StatelessWidget {
                       onPressed: () {
                         // Lógica para iniciar o chat com o médico
                       },
-                      icon: Icon(Icons.chat), // Ícone de chat
+                      icon: Icon(Icons.chat),
                       label: Text("Chat with Doctor"),
                       style: ElevatedButton.styleFrom(
                         shape: StadiumBorder(),
@@ -118,9 +116,16 @@ class DoctorDetailsPage extends StatelessWidget {
                     ),
                     ElevatedButton.icon(
                       onPressed: () {
-                        // Lógica para agendar uma consulta com o médico
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => ScheduleAppointmentPage(
+                              doctorName: doctorName,
+                            ),
+                          ),
+                        );
                       },
-                      icon: Icon(Icons.calendar_today), // Ícone de calendário
+                      icon: Icon(Icons.calendar_today),
                       label: Text("Schedule Appointment"),
                       style: ElevatedButton.styleFrom(
                         shape: StadiumBorder(),
