@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Add this line for date formatting
+import 'package:intl/intl.dart';
+import 'package:onlinedoctorapp/services/DoctorService.dart';
+import 'package:onlinedoctorapp/services/UserService.dart'; // Import UserService
 
 class DoctorRegistrationPage extends StatefulWidget {
   const DoctorRegistrationPage({Key? key}) : super(key: key);
@@ -20,13 +22,78 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _dateOfBirthController = TextEditingController();
-  final TextEditingController _specialtyController =
-      TextEditingController(text: 'Cardiology');
+  final TextEditingController _specialtyController = TextEditingController();
   final TextEditingController _additionalInfoController =
       TextEditingController();
 
   String _selectedGender = 'Male';
   final List<String> _genders = ['Male', 'Female', 'Other'];
+  List<String> _specialties = [];
+  String? _selectedSpecialty;
+  int userId = 1; // Replace with the actual user ID
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserSpecialties();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserSpecialties() async {
+    try {
+      final specialties = await DoctorService.geDoctorSpecialties();
+      setState(() {
+        _specialties = specialties;
+      });
+    } catch (error) {
+      print('Failed to load user specialties: $error');
+    }
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final userData = await UserService().getUserById(userId);
+      setState(() {
+        _firstNameController.text = userData['firstName'] ?? '';
+        _lastNameController.text = userData['lastName'] ?? '';
+        _usernameController.text = userData['name'] ?? '';
+        _emailController.text = userData['email'] ?? '';
+        _contactController.text = userData['contact'] ?? '';
+        _addressController.text = userData['address'] ?? '';
+        _dateOfBirthController.text = userData['birthdate'] ?? '';
+        _selectedGender = userData['gender'] ?? 'Male';
+        _selectedSpecialty = userData['specialty'] ?? _specialties.first;
+        _additionalInfoController.text = userData['additionalInfomation'] ?? '';
+      });
+    } catch (error) {
+      print('Failed to load user data: $error');
+    }
+  }
+
+  Future<void> _updateUserData() async {
+    if (_formKey.currentState!.validate()) {
+      try {
+        Map<String, dynamic> userData = {
+          'name': _usernameController.text,
+          'gender': _selectedGender,
+          'birthdate': _dateOfBirthController.text,
+          'email': _emailController.text,
+          'password': _passwordController.text,
+          'numeroutent': "123",
+          'img': _dateOfBirthController.text,
+        };
+
+        await UserService().updateUser(userId, userData);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('User updated successfully')),
+        );
+      } catch (error) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to update user: $error')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -235,40 +302,73 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                         },
                       ),
                       const SizedBox(height: 20),
-                      DropdownButtonFormField<String>(
+                      TextFormField(
+                        controller: _passwordController,
                         decoration: InputDecoration(
-                          hintText: "Specialty",
+                          hintText: "Password",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
                             borderSide: BorderSide.none,
                           ),
                           fillColor: Colors.purple.withOpacity(0.1),
                           filled: true,
-                          prefixIcon: const Icon(Icons.local_hospital),
+                          prefixIcon: const Icon(Icons.lock),
                         ),
-                        value: _specialtyController.text,
-                        items: <String>[
-                          'Cardiology',
-                          'Dermatology',
-                          'Neurology',
-                          'Orthopedics',
-                          'Pediatrics',
-                        ].map<DropdownMenuItem<String>>((String value) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value),
-                          );
-                        }).toList(),
-                        onChanged: (String? value) {
-                          setState(() {
-                            _specialtyController.text = value!;
-                          });
-                        },
+                        obscureText: true,
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please select a specialty';
+                            return 'Please enter your password';
                           }
                           return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      TextFormField(
+                        controller: _confirmPasswordController,
+                        decoration: InputDecoration(
+                          hintText: "Confirm Password",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                          fillColor: Colors.purple.withOpacity(0.1),
+                          filled: true,
+                          prefixIcon: const Icon(Icons.lock),
+                        ),
+                        obscureText: true,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Please confirm your password';
+                          }
+                          if (value != _passwordController.text) {
+                            return 'Passwords do not match';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 20),
+                      DropdownButtonFormField<String>(
+                        decoration: InputDecoration(
+                          fillColor: Colors.purple.withOpacity(0.1),
+                          filled: true,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(18),
+                            borderSide: BorderSide.none,
+                          ),
+                          prefixIcon: const Icon(Icons.local_hospital),
+                        ),
+                        value: _selectedSpecialty,
+                        hint: const Text("Select specialty"),
+                        items: _specialties.map((String specialty) {
+                          return DropdownMenuItem<String>(
+                            value: specialty,
+                            child: Text(specialty),
+                          );
+                        }).toList(),
+                        onChanged: (newValue) {
+                          setState(() {
+                            _selectedSpecialty = newValue!;
+                          });
                         },
                       ),
                       const SizedBox(height: 20),
@@ -297,11 +397,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                   Container(
                     padding: const EdgeInsets.only(top: 3, left: 3),
                     child: ElevatedButton(
-                      onPressed: () {
-                        if (_formKey.currentState!.validate()) {
-                          // Handle successful form submission
-                        }
-                      },
+                      onPressed: _updateUserData,
                       child: const Text(
                         "Submit",
                         style: TextStyle(fontSize: 20),

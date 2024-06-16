@@ -7,8 +7,9 @@ import '../ui/DoctorDetailsPage.dart';
 import '../ui/ScheduleAppointmentPage.dart';
 import '../ui/UserRegistrationPage.dart';
 import '../ui/DoctorRegistrationPage.dart';
+import '../tabs/ScheduleTab.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   final String userName;
   final String userType;
 
@@ -16,7 +17,32 @@ class HomePage extends StatelessWidget {
       : super(key: key);
 
   @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+
+  void goToSchedule() {
+    setState(() {
+      _selectedIndex = 1;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    List<Map> navigationBarItems = [
+      {'icon': Icons.local_hospital, 'index': 0},
+      {'icon': Icons.calendar_today, 'index': 1},
+    ];
+
+    List<Widget> screens = [
+      HomeTab(
+        onPressedScheduleCard: goToSchedule,
+      ),
+      ScheduleTab(),
+    ];
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Online Doctor App 👋'),
@@ -48,7 +74,7 @@ class HomePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          userName,
+                          widget.userName + "\n" + widget.userType,
                           style: TextStyle(
                             color: Colors.white,
                             fontSize: 18,
@@ -67,14 +93,14 @@ class HomePage extends StatelessWidget {
               title: const Text('User details'),
               onTap: () {
                 Navigator.pop(context);
-                if (userType == 'patient') {
+                if (widget.userType == 'patient') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
                       builder: (context) => UserRegistrationPage(),
                     ),
                   );
-                } else if (userType == 'doctor') {
+                } else if (widget.userType == 'doctor') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -102,8 +128,38 @@ class HomePage extends StatelessWidget {
           ],
         ),
       ),
-      body: HomeTab(
-        onPressedScheduleCard: () {},
+      body: screens[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        selectedFontSize: 0,
+        selectedItemColor: Color(MyColors.primary),
+        showSelectedLabels: false,
+        showUnselectedLabels: false,
+        items: [
+          for (var navigationBarItem in navigationBarItems)
+            BottomNavigationBarItem(
+              icon: Container(
+                height: 55,
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: _selectedIndex == navigationBarItem['index']
+                        ? BorderSide(color: Color(MyColors.bg01), width: 5)
+                        : BorderSide.none,
+                  ),
+                ),
+                child: Icon(
+                  navigationBarItem['icon'],
+                  color: _selectedIndex == 0
+                      ? Color(MyColors.bg01)
+                      : Color(MyColors.bg02),
+                ),
+              ),
+              label: '',
+            ),
+        ],
+        currentIndex: _selectedIndex,
+        onTap: (value) => setState(() {
+          _selectedIndex = value;
+        }),
       ),
     );
   }
@@ -135,7 +191,7 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> fetchUsers() async {
     try {
-      final List<dynamic> fetchedDoctors = await UserService.getUsers();
+      final List<dynamic> fetchedDoctors = await UserService.getAllUsers();
       setState(() {
         doctors = fetchedDoctors;
         filteredDoctors = fetchedDoctors;
@@ -264,18 +320,9 @@ class TopDoctorCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Icon(
-                      Icons.star,
-                      color: Color(MyColors.yellow02),
-                      size: 18,
-                    ),
                     SizedBox(
                       width: 5,
                     ),
-                    Text(
-                      '4.0 - 50 Reviews',
-                      style: TextStyle(color: Color(MyColors.grey02)),
-                    )
                   ],
                 )
               ],
@@ -333,7 +380,7 @@ class TopDoctorCard extends StatelessWidget {
                 title: Text('Chat with doctor'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Navegar para a página de chat com o médico
+                  // Navigate to doctor chat page
                 },
               ),
             ],

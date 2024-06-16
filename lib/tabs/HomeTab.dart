@@ -102,8 +102,8 @@ class HomeTab extends StatefulWidget {
 }
 
 class _HomeTabState extends State<HomeTab> {
-  late List<dynamic> doctors;
-  late List<dynamic> filteredDoctors;
+  late List<dynamic> doctors = [];
+  late List<dynamic> filteredDoctors = [];
   TextEditingController searchController = TextEditingController();
 
   @override
@@ -115,7 +115,7 @@ class _HomeTabState extends State<HomeTab> {
 
   Future<void> fetchUsers() async {
     try {
-      final List<dynamic> fetchedDoctors = await UserService.getUsers();
+      final List<dynamic> fetchedDoctors = await UserService.getAllUsers();
       setState(() {
         doctors = fetchedDoctors;
         filteredDoctors = fetchedDoctors;
