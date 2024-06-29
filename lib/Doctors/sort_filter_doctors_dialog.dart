@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:onlinedoctorapp/Doctors/specialities.dart'; // Import specialities.dart
+import 'package:onlinedoctorapp/Doctors/specialities.dart';
+import 'package:onlinedoctorapp/ReusableElements/Buttons/custom_primary_button.dart';
+import 'package:onlinedoctorapp/ReusableElements/Buttons/custom_secondary_button.dart';
+import 'package:onlinedoctorapp/ReusableElements/Buttons/custom_sorting_order_button.dart';
+import 'package:onlinedoctorapp/model/doctor.dart';
 
 class SortFilterDoctorsDialog extends StatefulWidget {
-  final List<Map<String, dynamic>> allDoctors;
+  final List<Doctor> allDoctors;
   final void Function(String?, bool, List<String>, List<int>) onApply;
 
   const SortFilterDoctorsDialog({
@@ -31,8 +35,7 @@ class SortFilterDoctorsDialogState extends State<SortFilterDoctorsDialog> {
 
   Future<void> _fetchSpecialties() async {
     try {
-      List<String> specialities = await Specialities
-          .fetchSpecialities(); // Fetch specialties from specialities.dart
+      List<String> specialities = await Specialities.fetchSpecialities();
       setState(() {
         _allSpecialties = specialities;
       });
@@ -44,38 +47,39 @@ class SortFilterDoctorsDialogState extends State<SortFilterDoctorsDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: const Text('Sort and Filter'),
+      contentPadding: const EdgeInsets.fromLTRB(24.0, 20.0, 24.0, 0),
+      title: const Text('Ordenar e Filtrar'),
       content: SingleChildScrollView(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             _buildSortDropdown(),
+            _buildOrderToggle(),
             const Divider(),
-            _buildFilterTitle('Specialties'),
+            _buildFilterTitle('Especialidades'),
             _buildSpecialtiesCheckboxes(),
             const Divider(),
             _buildFilterTitle('Ratings'),
             _buildRatingsCheckboxes(),
             const Divider(),
-            _buildOrderToggle(),
           ],
         ),
       ),
       actions: [
-        TextButton(
+        SecondaryButton(
           onPressed: () {
             Navigator.of(context).pop();
           },
-          child: const Text('Cancel'),
+          label: 'Cancelar',
         ),
-        ElevatedButton(
+        PrimaryButton(
           onPressed: () {
-            // Ensure onApply callback is not null
             widget.onApply(
                 _sortBy, _isAscending, _selectedSpecialties, _selectedRatings);
             Navigator.of(context).pop();
           },
-          child: const Text('Apply'),
+          label: 'Aplicar',
         ),
       ],
     );
@@ -92,11 +96,11 @@ class SortFilterDoctorsDialogState extends State<SortFilterDoctorsDialog> {
       items: const [
         DropdownMenuItem(
           value: 'name',
-          child: Text('Name'),
+          child: Text('Nome'),
         ),
         DropdownMenuItem(
           value: 'specialty',
-          child: Text('Specialty'),
+          child: Text('Especialidade'),
         ),
         DropdownMenuItem(
           value: 'rating',
@@ -104,7 +108,7 @@ class SortFilterDoctorsDialogState extends State<SortFilterDoctorsDialog> {
         ),
       ],
       decoration: const InputDecoration(
-        labelText: 'Sort By',
+        labelText: 'Ordenar Por',
         border: OutlineInputBorder(),
       ),
     );
@@ -164,19 +168,16 @@ class SortFilterDoctorsDialogState extends State<SortFilterDoctorsDialog> {
   }
 
   Widget _buildOrderToggle() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        const Text('Ascending'),
-        Switch(
-          value: _isAscending,
-          onChanged: (value) {
-            setState(() {
-              _isAscending = value;
-            });
-          },
-        ),
-        const Text('Descending'),
+    return SortingOrderButton(
+      isSelected: [_isAscending, !_isAscending],
+      onPressed: (index) {
+        setState(() {
+          _isAscending = index == 0;
+        });
+      },
+      children: const [
+        Text('Ascendente'),
+        Text('Descendente'),
       ],
     );
   }

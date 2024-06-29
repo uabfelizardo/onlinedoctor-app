@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Add this line for date formatting
 
 class UserRegistrationPage extends StatefulWidget {
@@ -356,3 +356,4 @@ class _UserRegistrationPageState extends State<UserRegistrationPage> {
 void main() {
   runApp(const UserRegistrationPage());
 }
+ */

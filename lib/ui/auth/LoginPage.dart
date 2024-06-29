@@ -1,4 +1,4 @@
-import 'package:onlinedoctorapp/services/LoginService.dart'; // Import the API service
+/* import 'package:onlinedoctorapp/services/LoginService.dart'; // Import the API service
 
 import 'package:flutter/material.dart';
 import 'SignupPage.dart'; // Import the SignupPage
@@ -169,3 +169,4 @@ class LoginPage extends StatelessWidget {
 void main() {
   runApp(LoginPage());
 }
+ */

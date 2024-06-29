@@ -1,13 +1,13 @@
 class User {
-  final String? name;
-  final String? gender;
-  final String? birthdate;
-  final String? email;
-  final String? password;
-  final String? numeroutent;
-  final String? createdAt;
-  final String? updatedAt;
-  final int? id;
+  final String name;
+  final String gender;
+  final String birthdate;
+  final String email;
+  final String password;
+  final String numeroutent;
+  final String createdAt;
+  final String updatedAt;
+  final int id;
 
   User(
       {required this.name,

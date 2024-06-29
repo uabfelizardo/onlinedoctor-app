@@ -78,12 +78,12 @@ class _ScheduleTabState extends State<ScheduleTab> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
+            const Text(
               'Schedule',
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.purple),
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             Stack(
@@ -129,7 +129,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
                   ),
                 ),
                 AnimatedAlign(
-                  duration: Duration(milliseconds: 200),
+                  duration: const Duration(milliseconds: 200),
                   alignment: _alignment,
                   child: Container(
                     width: 100,
@@ -141,7 +141,7 @@ class _ScheduleTabState extends State<ScheduleTab> {
                     child: Center(
                       child: Text(
                         status.name,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
@@ -151,47 +151,47 @@ class _ScheduleTabState extends State<ScheduleTab> {
                 )
               ],
             ),
-            SizedBox(
+            const SizedBox(
               height: 20,
             ),
             Expanded(
               child: ListView.builder(
                 itemCount: filteredSchedules.length,
                 itemBuilder: (context, index) {
-                  var _schedule = filteredSchedules[index];
+                  var schedule = filteredSchedules[index];
                   bool isLastElement = filteredSchedules.length + 1 == index;
                   return Card(
                     margin: !isLastElement
-                        ? EdgeInsets.only(bottom: 20)
+                        ? const EdgeInsets.only(bottom: 20)
                         : EdgeInsets.zero,
                     child: Padding(
-                      padding: EdgeInsets.all(15),
+                      padding: const EdgeInsets.all(15),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Row(
                             children: [
                               CircleAvatar(
-                                backgroundImage: AssetImage(_schedule['img']),
+                                backgroundImage: AssetImage(schedule['img']),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 10,
                               ),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    _schedule['doctorName'],
+                                    schedule['doctorName'],
                                     style: TextStyle(
                                       color: Color(MyColors.header01),
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
-                                  SizedBox(
+                                  const SizedBox(
                                     height: 5,
                                   ),
                                   Text(
-                                    _schedule['doctorTitle'],
+                                    schedule['doctorTitle'],
                                     style: TextStyle(
                                       color: Color(MyColors.grey02),
                                       fontSize: 12,
@@ -202,11 +202,11 @@ class _ScheduleTabState extends State<ScheduleTab> {
                               ),
                             ],
                           ),
-                          SizedBox(
+                          const SizedBox(
                             height: 15,
                           ),
-                          DateTimeCard(),
-                          SizedBox(
+                          const DateTimeCard(),
+                          const SizedBox(
                             height: 15,
                           ),
                           Row(
@@ -214,16 +214,16 @@ class _ScheduleTabState extends State<ScheduleTab> {
                             children: [
                               Expanded(
                                 child: OutlinedButton(
-                                  child: Text('Cancel'),
+                                  child: const Text('Cancel'),
                                   onPressed: () {},
                                 ),
                               ),
-                              SizedBox(
+                              const SizedBox(
                                 width: 20,
                               ),
                               Expanded(
                                 child: ElevatedButton(
-                                  child: Text('Reschedule'),
+                                  child: const Text('Reschedule'),
                                   onPressed: () => {},
                                 ),
                               )
@@ -256,7 +256,7 @@ class DateTimeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       width: double.infinity,
-      padding: EdgeInsets.all(20),
+      padding: const EdgeInsets.all(20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -268,7 +268,7 @@ class DateTimeCard extends StatelessWidget {
                 color: Color(MyColors.primary),
                 size: 15,
               ),
-              SizedBox(
+              const SizedBox(
                 width: 5,
               ),
               Text(
@@ -288,7 +288,7 @@ class DateTimeCard extends StatelessWidget {
                 color: Color(MyColors.primary),
                 size: 17,
               ),
-              SizedBox(
+              const SizedBox(
                 width: 5,
               ),
               Text(

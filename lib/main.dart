@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'ui/auth/LoginPage.dart'; // Importe a LoginPage
-import 'home_page.dart'; // Import your home page widget
+import 'home_page.dart';
+// Import custom buttons
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -14,16 +14,15 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'My App',
       theme: mainTheme,
-      debugShowCheckedModeBanner: false,
-      home: SplashScreen(),
+      home: const MyHomePage(),
     );
   }
 }
 
-// Define your custom theme
+// App theme
 final ThemeData mainTheme = ThemeData(
   primaryColor: const Color(0xFF63B2A9),
-  fontFamily: "",
+  fontFamily: "", // Specify a font family if needed
   buttonTheme: const ButtonThemeData(
     buttonColor: Color(0xFF63B2A9),
     textTheme: ButtonTextTheme.primary,
@@ -34,19 +33,31 @@ final ThemeData mainTheme = ThemeData(
   ),
   textButtonTheme: TextButtonThemeData(
     style: ButtonStyle(
-      backgroundColor: WidgetStateProperty.resolveWith<Color>((states) {
-        if (states.contains(WidgetState.disabled)) {
-          return Colors.grey; // Disabled color
-        }
-        return const Color(0xFF63B2A9); // Enabled color
-      }),
       foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
+      backgroundColor: WidgetStateProperty.all<Color>(const Color(0xFF63B2A9)),
+    ),
+  ),
+  inputDecorationTheme: const InputDecorationTheme(
+    focusedBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFF63B2A9)),
+    ),
+    enabledBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.grey),
+    ),
+    border: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.grey),
+    ),
+    focusedErrorBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Color(0xFF63B2A9)),
+    ),
+    errorBorder: OutlineInputBorder(
+      borderSide: BorderSide(color: Colors.red),
     ),
   ),
 );
 
 
-class SplashScreen extends StatefulWidget {
+/* class SplashScreen extends StatefulWidget {
   @override
   _SplashScreenState createState() => _SplashScreenState();
 }
@@ -62,7 +73,7 @@ class _SplashScreenState extends State<SplashScreen> {
         MaterialPageRoute(builder: (context) => LoginPage()),
       );
     });
-  }
+  } 
 
   @override
   Widget build(BuildContext context) {
@@ -99,3 +110,4 @@ class _SplashScreenState extends State<SplashScreen> {
     );
   }
 }
+*/

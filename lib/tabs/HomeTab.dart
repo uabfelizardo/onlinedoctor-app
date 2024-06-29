@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:onlinedoctorapp/styles/colors.dart';
 import 'package:onlinedoctorapp/styles/styles.dart';
 import 'package:onlinedoctorapp/ui/auth/LoginPage.dart';
@@ -388,3 +388,4 @@ class UserRegistrationPage extends StatelessWidget {
 void main() {
   runApp(MaterialApp(home: HomeTab(onPressedScheduleCard: () {})));
 }
+ */

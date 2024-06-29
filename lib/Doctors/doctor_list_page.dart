@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:onlinedoctorapp/AppBar/custom_app_bar.dart';
+import 'package:onlinedoctorapp/Doctors/doctor_info_page.dart';
 import 'package:onlinedoctorapp/Doctors/sort_filter_doctors_dialog.dart';
+import 'package:onlinedoctorapp/base_page.dart';
+import 'package:onlinedoctorapp/model/doctor.dart';
+
+typedef PropertySelector<T> = Comparable Function(T);
 
 class DoctorListPage extends StatefulWidget {
   const DoctorListPage({Key? key}) : super(key: key);
@@ -10,20 +14,60 @@ class DoctorListPage extends StatefulWidget {
 }
 
 class DoctorListPageState extends State<DoctorListPage> {
-  List<Map<String, dynamic>> allDoctors = [
-    {"name": "Ana Simões", "specialty": "Cardiologia", "rating": 3},
-    {"name": "Bruno Rodrigues", "specialty": "Dermatologia", "rating": 4},
-    {"name": "Catarina Marques", "specialty": "Neurologia", "rating": 5},
+  List<Doctor> allDoctors = [
+    Doctor(
+      id: 1,
+      name: "Ana Simões",
+      gender: "Female",
+      birthdate: "1990-01-01",
+      email: "ana@example.com",
+      password: "password",
+      numeroutent: "123456789",
+      createdAt: "2023-01-01",
+      updatedAt: "2023-01-01",
+      specialty: "Cardiologia",
+      rating: 3,
+      imageUrl: "https://example.com/images/ana.png",
+    ),
+    Doctor(
+      id: 2,
+      name: "Bruno Rodrigues",
+      gender: "Male",
+      birthdate: "1985-05-15",
+      email: "bruno@example.com",
+      password: "password",
+      numeroutent: "987654321",
+      createdAt: "2023-01-01",
+      updatedAt: "2023-01-01",
+      specialty: "Dermatologia",
+      rating: 4,
+      imageUrl: "https://example.com/images/bruno.png",
+    ),
+    Doctor(
+      id: 3,
+      name: "Catarina Marques",
+      gender: "Female",
+      birthdate: "1988-12-20",
+      email: "catarina@example.com",
+      password: "password",
+      numeroutent: "456789123",
+      createdAt: "2023-01-01",
+      updatedAt: "2023-01-01",
+      specialty: "Neurologia",
+      rating: 5,
+      imageUrl: "https://example.com/images/catarina.png",
+    ),
   ];
 
-  List<Map<String, dynamic>> filteredDoctors = [];
+  List<Doctor> filteredDoctors = []; // Holds the filtered list
 
   final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    filteredDoctors = allDoctors;
+    // Initialize filteredDoctors with allDoctors initially
+    filteredDoctors.addAll(allDoctors);
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -37,7 +81,7 @@ class DoctorListPageState extends State<DoctorListPage> {
     String query = _searchController.text.toLowerCase();
     setState(() {
       filteredDoctors = allDoctors.where((doctor) {
-        final name = doctor['name'].toLowerCase();
+        final name = doctor.name.toLowerCase();
         return name.contains(query);
       }).toList();
     });
@@ -45,9 +89,7 @@ class DoctorListPageState extends State<DoctorListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: const CustomAppBar(title: ''),
-      drawer: const CustomDrawer(),
+    return BasePage(
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -59,14 +101,11 @@ class DoctorListPageState extends State<DoctorListPage> {
             ),
             Padding(
               padding: const EdgeInsets.symmetric(vertical: 16.0),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 16.0),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: const InputDecoration(
-                    hintText: 'Pesquisar Médico(a)',
-                    border: OutlineInputBorder(),
-                  ),
+              child: TextField(
+                controller: _searchController,
+                decoration: const InputDecoration(
+                  hintText: 'Pesquisar Médico(a)',
+                  border: OutlineInputBorder(),
                 ),
               ),
             ),
@@ -84,22 +123,28 @@ class DoctorListPageState extends State<DoctorListPage> {
                         child: const Icon(Icons.person),
                       ),
                       title: Text(
-                        filteredDoctors[index]['name'],
+                        filteredDoctors[index].name,
                         style: const TextStyle(fontSize: 20),
                       ),
                       subtitle: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            filteredDoctors[index]['specialty'],
+                            filteredDoctors[index].specialty,
                             style: const TextStyle(fontSize: 16),
                           ),
-                          _buildRatingStars(filteredDoctors[index]['rating']),
+                          _buildRatingStars(filteredDoctors[index].rating),
                         ],
                       ),
                       trailing: const Icon(Icons.arrow_forward),
                       onTap: () {
-                        // Add navigation or action
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => DoctorInfo(
+                                    doctor: filteredDoctors[index],
+                                  )),
+                        );
                       },
                     ),
                   );
@@ -114,7 +159,7 @@ class DoctorListPageState extends State<DoctorListPage> {
           _showSortFilterDialog();
         },
         icon: const Icon(Icons.filter_list),
-        label: const Text('Sort & Filter'),
+        label: const Text('Ordenar e Filtrar'),
       ),
     );
   }
@@ -127,6 +172,45 @@ class DoctorListPageState extends State<DoctorListPage> {
     return Row(children: stars);
   }
 
+  Map<String, PropertySelector<Doctor>> propertyMap = {
+    'name': (Doctor doctor) => doctor.name,
+    'specialty': (Doctor doctor) => doctor.specialty,
+    'ranking': (Doctor doctor) => doctor.rating,
+  };
+
+  List<Doctor> sortDoctors(
+      List<Doctor> doctors, String? sortBy, bool isAscending) {
+    if (sortBy != null && propertyMap.containsKey(sortBy)) {
+      doctors.sort((a, b) {
+        final aValue = propertyMap[sortBy]!(a);
+        final bValue = propertyMap[sortBy]!(b);
+        return Comparable.compare(aValue, bValue);
+      });
+
+      if (!isAscending) {
+        doctors = doctors.reversed.toList();
+      }
+    }
+    return doctors;
+  }
+
+  List<Doctor> filterDoctors(List<Doctor> doctors,
+      List<String> selectedSpecialties, List<int> selectedRatings) {
+    if (selectedSpecialties.isNotEmpty) {
+      doctors = doctors
+          .where((doctor) => selectedSpecialties.contains(doctor.specialty))
+          .toList();
+    }
+
+    if (selectedRatings.isNotEmpty) {
+      doctors = doctors
+          .where((doctor) => selectedRatings.contains(doctor.rating))
+          .toList();
+    }
+
+    return doctors;
+  }
+
   void _showSortFilterDialog() {
     showDialog(
       context: context,
@@ -134,7 +218,18 @@ class DoctorListPageState extends State<DoctorListPage> {
         return SortFilterDoctorsDialog(
           allDoctors: allDoctors,
           onApply: (sortBy, isAscending, selectedSpecialties, selectedRatings) {
-            // Implement sort and filter functionality
+            setState(() {
+              List<Doctor> tempDoctors = allDoctors;
+
+              tempDoctors = filterDoctors(
+                  tempDoctors, selectedSpecialties, selectedRatings);
+              tempDoctors = sortDoctors(tempDoctors, sortBy, isAscending);
+
+              // Set the filteredDoctors to the newly filtered and sorted list
+              filteredDoctors = tempDoctors;
+            });
+
+            Navigator.of(context).pop(); // Close the dialog
           },
         );
       },

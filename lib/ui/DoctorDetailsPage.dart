@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Adicione esta linha para formatação de datas
 
 class DoctorDetailsPage extends StatelessWidget {
@@ -149,3 +149,4 @@ void main() {
     ),
   ));
 }
+ */

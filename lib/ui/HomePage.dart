@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+/* import 'package:flutter/material.dart';
 import 'package:onlinedoctorapp/styles/colors.dart';
 import 'package:onlinedoctorapp/tabs/HomeTab.dart';
 import 'package:onlinedoctorapp/tabs/ScheduleTab.dart';
@@ -76,3 +76,4 @@ class _HomeState extends State<Home> {
     );
   }
 }
+ */
