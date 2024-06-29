@@ -8,49 +8,46 @@ class Doctor extends User {
   Doctor({
     required String name,
     required String gender,
-    required String birthdate,
+    required DateTime birthdate,
     required String email,
     required String password,
-    required String numeroutent,
-    required String createdAt,
-    required String updatedAt,
-    required int id,
+    required String numeroUtente,
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    required int userId,
     required this.specialty,
     required this.rating,
     required this.imageUrl,
   }) : super(
-            name: name,
-            gender: gender,
-            birthdate: birthdate,
-            email: email,
-            password: password,
-            numeroutent: numeroutent,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-            id: id);
+          name: name,
+          gender: gender,
+          birthDate: birthdate,
+          email: email,
+          password: password,
+          numeroUtente: numeroUtente.toString(),
+          createdAt: createdAt,
+          updatedAt: updatedAt,
+          id: userId,
+        );
 
   factory Doctor.fromJson(Map<String, dynamic> json) {
-    return Doctor(
-      id: json["id"],
-      name: json["name"],
-      gender: json["gender"],
-      birthdate: json["birthdate"],
-      email: json["email"],
-      password: json["password"],
-      numeroutent: json["numeroutent"],
-      createdAt: json["createdAt"],
-      updatedAt: json["updatedAt"],
-      specialty: json["specialty"],
-      rating: json["rating"],
-      imageUrl: json["imageUrl"],
-    );
-  }
+  final doctorInfo = json['doctorInformation'] ?? {};
+  final specialties = json['specialties'] ?? [];
+  final specialty = specialties.isNotEmpty ? specialties[0]['specialty']['description'] : '';
 
-  @override
-  Map<String, dynamic> get toJson => super.toJson
-    ..addAll({
-      "specialty": specialty,
-      "ranking": rating,
-      "imageUrl": imageUrl,
-    });
+  return Doctor(
+    userId: doctorInfo['user_id'] ?? 0,
+    name: doctorInfo['name'] ?? '',
+    gender: doctorInfo['gender'] ?? '',
+    birthdate: doctorInfo['birthdate'] != null ? DateTime.parse(doctorInfo['birthdate']) : DateTime.now(),
+    email: doctorInfo['email'] ?? '',
+    password: doctorInfo['password'] ?? '',
+    numeroUtente: doctorInfo['numeroutent']?.toString() ?? '',
+    createdAt: doctorInfo['createdAt'] != null ? DateTime.parse(doctorInfo['createdAt']) : DateTime.now(),
+    updatedAt: doctorInfo['updatedAt'] != null ? DateTime.parse(doctorInfo['updatedAt']) : DateTime.now(),
+    specialty: specialty,
+    rating: json['rating'] ?? 0,
+    imageUrl: doctorInfo['img'] ?? '',
+  );
+}
 }

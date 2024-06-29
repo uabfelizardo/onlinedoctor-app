@@ -1,46 +1,38 @@
 class User {
   final String name;
   final String gender;
-  final String birthdate;
+  final DateTime birthDate;
   final String email;
   final String password;
-  final String numeroutent;
-  final String createdAt;
-  final String updatedAt;
+  final String numeroUtente;
+  final DateTime createdAt;
+  final DateTime updatedAt;
   final int id;
 
-  User(
-      {required this.name,
-      required this.gender,
-      required this.birthdate,
-      required this.email,
-      required this.password,
-      required this.numeroutent,
-      required this.createdAt,
-      required this.updatedAt,
-      required this.id});
+  User({
+    required this.name,
+    required this.gender,
+    required this.birthDate,
+    required this.email,
+    required this.password,
+    required this.numeroUtente,
+    required this.createdAt,
+    required this.updatedAt,
+    required this.id,
+  });
 
   factory User.fromJson(Map<String, dynamic> json) {
-    return User(
-        id: json["id"],
-        name: json["name"],
-        gender: json["gender"],
-        birthdate: json["birthdate"],
-        email: json["email"],
-        password: json["password"],
-        numeroutent: json["numeroutent"],
-        createdAt: json["createdAt"],
-        updatedAt: json["updatedAt"]);
-  }
-  Map<String, dynamic> get toJson => {
-        "id": id.toString(),
-        "name": name,
-        "gender": gender,
-        "birthdate": birthdate,
-        "email": email,
-        "password": password,
-        "numeroutent": numeroutent,
-        "createdAt": createdAt,
-        "updatedAt": updatedAt,
-      };
+  return User(
+    id: json['user_id'] ?? 0,
+    name: json['name'] ?? '',
+    gender: json['gender'] ?? '',
+    birthDate: json['birthdate'] != null ? DateTime.parse(json['birthdate']) : DateTime.now(),
+    email: json['email'] ?? '',
+    password: json['password'] ?? '',
+    numeroUtente: json['numeroutent']?.toString() ?? '',
+    createdAt: json['createdAt'] != null ? DateTime.parse(json['createdAt']) : DateTime.now(),
+    updatedAt: json['updatedAt'] != null ? DateTime.parse(json['updatedAt']) : DateTime.now(),
+  );
+}
+
 }

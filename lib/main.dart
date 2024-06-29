@@ -20,26 +20,28 @@ class MyApp extends StatelessWidget {
 }
 
 // App theme
+const Color primaryColor = Color(0xFF63B2A9);
+
 final ThemeData mainTheme = ThemeData(
-  primaryColor: const Color(0xFF63B2A9),
-  fontFamily: "", // Specify a font family if needed
+  primaryColor: primaryColor,
+  scaffoldBackgroundColor: Colors.white,
   buttonTheme: const ButtonThemeData(
-    buttonColor: Color(0xFF63B2A9),
+    buttonColor: primaryColor,
     textTheme: ButtonTextTheme.primary,
   ),
   floatingActionButtonTheme: const FloatingActionButtonThemeData(
-    backgroundColor: Color(0xFF63B2A9),
+    backgroundColor: primaryColor,
     foregroundColor: Colors.white,
   ),
   textButtonTheme: TextButtonThemeData(
     style: ButtonStyle(
       foregroundColor: WidgetStateProperty.all<Color>(Colors.white),
-      backgroundColor: WidgetStateProperty.all<Color>(const Color(0xFF63B2A9)),
+      backgroundColor: WidgetStateProperty.all<Color>(primaryColor),
     ),
   ),
   inputDecorationTheme: const InputDecorationTheme(
     focusedBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: Color(0xFF63B2A9)),
+      borderSide: BorderSide(color: primaryColor),
     ),
     enabledBorder: OutlineInputBorder(
       borderSide: BorderSide(color: Colors.grey),
@@ -48,13 +50,23 @@ final ThemeData mainTheme = ThemeData(
       borderSide: BorderSide(color: Colors.grey),
     ),
     focusedErrorBorder: OutlineInputBorder(
-      borderSide: BorderSide(color: Color(0xFF63B2A9)),
+      borderSide: BorderSide(color: primaryColor),
     ),
     errorBorder: OutlineInputBorder(
       borderSide: BorderSide(color: Colors.red),
     ),
   ),
+  checkboxTheme: CheckboxThemeData(
+    fillColor: WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+      if (states.contains(WidgetState.selected)) {
+        return primaryColor; // Use primary color when selected
+      }
+      return Colors.grey; // Use grey color when not selected
+    }),
+  ),
 );
+
+
 
 
 /* class SplashScreen extends StatefulWidget {

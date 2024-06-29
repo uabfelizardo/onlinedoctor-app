@@ -3,6 +3,7 @@ import 'package:onlinedoctorapp/Doctors/doctor_info_page.dart';
 import 'package:onlinedoctorapp/Doctors/sort_filter_doctors_dialog.dart';
 import 'package:onlinedoctorapp/base_page.dart';
 import 'package:onlinedoctorapp/model/doctor.dart';
+import 'package:onlinedoctorapp/services/doctor_service.dart';
 
 typedef PropertySelector<T> = Comparable Function(T);
 
@@ -14,60 +15,15 @@ class DoctorListPage extends StatefulWidget {
 }
 
 class DoctorListPageState extends State<DoctorListPage> {
-  List<Doctor> allDoctors = [
-    Doctor(
-      id: 1,
-      name: "Ana Simões",
-      gender: "Female",
-      birthdate: "1990-01-01",
-      email: "ana@example.com",
-      password: "password",
-      numeroutent: "123456789",
-      createdAt: "2023-01-01",
-      updatedAt: "2023-01-01",
-      specialty: "Cardiologia",
-      rating: 3,
-      imageUrl: "https://example.com/images/ana.png",
-    ),
-    Doctor(
-      id: 2,
-      name: "Bruno Rodrigues",
-      gender: "Male",
-      birthdate: "1985-05-15",
-      email: "bruno@example.com",
-      password: "password",
-      numeroutent: "987654321",
-      createdAt: "2023-01-01",
-      updatedAt: "2023-01-01",
-      specialty: "Dermatologia",
-      rating: 4,
-      imageUrl: "https://example.com/images/bruno.png",
-    ),
-    Doctor(
-      id: 3,
-      name: "Catarina Marques",
-      gender: "Female",
-      birthdate: "1988-12-20",
-      email: "catarina@example.com",
-      password: "password",
-      numeroutent: "456789123",
-      createdAt: "2023-01-01",
-      updatedAt: "2023-01-01",
-      specialty: "Neurologia",
-      rating: 5,
-      imageUrl: "https://example.com/images/catarina.png",
-    ),
-  ];
-
-  List<Doctor> filteredDoctors = []; // Holds the filtered list
-
+  List<Doctor> allDoctors = [];
+  List<Doctor> filteredDoctors = [];
   final TextEditingController _searchController = TextEditingController();
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    // Initialize filteredDoctors with allDoctors initially
-    filteredDoctors.addAll(allDoctors);
+    _fetchDoctors();
     _searchController.addListener(_onSearchChanged);
   }
 
@@ -75,6 +31,29 @@ class DoctorListPageState extends State<DoctorListPage> {
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _fetchDoctors() async {
+    try {
+      final doctors = await DoctorService.getAllDoctors();
+      if (mounted) {
+        setState(() {
+          allDoctors = doctors;
+          filteredDoctors = doctors;
+          isLoading = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load doctors: $error')),
+        );
+      }
+    }
   }
 
   void _onSearchChanged() {
@@ -110,46 +89,50 @@ class DoctorListPageState extends State<DoctorListPage> {
               ),
             ),
             Expanded(
-              child: ListView.builder(
-                itemCount: filteredDoctors.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    margin: const EdgeInsets.symmetric(vertical: 8),
-                    child: ListTile(
-                      leading: Container(
-                        width: 50,
-                        height: 50,
-                        color: Colors.grey[300],
-                        child: const Icon(Icons.person),
-                      ),
-                      title: Text(
-                        filteredDoctors[index].name,
-                        style: const TextStyle(fontSize: 20),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            filteredDoctors[index].specialty,
-                            style: const TextStyle(fontSize: 16),
+              child: isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView.builder(
+                      itemCount: filteredDoctors.length,
+                      itemBuilder: (context, index) {
+                        return Card(
+                          color: const Color.fromARGB(255, 239, 239, 239),
+                          margin: const EdgeInsets.symmetric(vertical: 8),
+                          child: ListTile(
+                            leading: Container(
+                              width: 50,
+                              height: 50,
+                              color: const Color.fromARGB(255, 224, 224, 224),
+                              child: const Icon(Icons.person),
+                            ),
+                            title: Text(
+                              filteredDoctors[index].name,
+                              style: const TextStyle(fontSize: 20),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  filteredDoctors[index].specialty,
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                _buildRatingStars(
+                                    filteredDoctors[index].rating),
+                              ],
+                            ),
+                            trailing: const Icon(Icons.arrow_forward),
+                            onTap: () {
+                              Navigator.pushReplacement(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => DoctorInfo(
+                                          doctor: filteredDoctors[index],
+                                        )),
+                              );
+                            },
                           ),
-                          _buildRatingStars(filteredDoctors[index].rating),
-                        ],
-                      ),
-                      trailing: const Icon(Icons.arrow_forward),
-                      onTap: () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                              builder: (context) => DoctorInfo(
-                                    doctor: filteredDoctors[index],
-                                  )),
                         );
                       },
                     ),
-                  );
-                },
-              ),
             ),
           ],
         ),
@@ -225,11 +208,10 @@ class DoctorListPageState extends State<DoctorListPage> {
                   tempDoctors, selectedSpecialties, selectedRatings);
               tempDoctors = sortDoctors(tempDoctors, sortBy, isAscending);
 
-              // Set the filteredDoctors to the newly filtered and sorted list
               filteredDoctors = tempDoctors;
             });
 
-            Navigator.of(context).pop(); // Close the dialog
+           // Navigator.of(context).pop(); // Close the dialog
           },
         );
       },

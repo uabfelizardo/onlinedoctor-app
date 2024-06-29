@@ -1,11 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:onlinedoctorapp/base_page.dart';
 import 'package:onlinedoctorapp/model/doctor.dart';
+import 'package:onlinedoctorapp/model/review.dart';
+import 'package:onlinedoctorapp/services/doctor_service.dart';
 
-class DoctorInfo extends StatelessWidget {
+class DoctorInfo extends StatefulWidget {
   final Doctor doctor;
 
-  const DoctorInfo({super.key, required this.doctor});
+  const DoctorInfo({Key? key, required this.doctor}) : super(key: key);
+
+  @override
+  DoctorInfoState createState() => DoctorInfoState();
+}
+
+class DoctorInfoState extends State<DoctorInfo> {
+  List<UserReview> reviews = [];
+  bool isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchDoctorReviews(widget.doctor.id);
+  }
+
+  Future<void> _fetchDoctorReviews(int doctorId) async {
+    try {
+      if (mounted) {
+        List<UserReview> fetchedReviews =
+            await DoctorService.getDoctorReviews(doctorId);
+        setState(() {
+          reviews = fetchedReviews;
+          isLoading = false;
+        });
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() {
+          isLoading = false;
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to load reviews: $error')),
+        );
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +54,10 @@ class DoctorInfo extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Visualizar Médico',
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            const Text(
+              'Visualizar Médico',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             Row(
               children: [
@@ -32,39 +73,30 @@ class DoctorInfo extends StatelessWidget {
                   children: [
                     const Text('Nome:',
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(doctor.name),
+                    Text(widget.doctor.name),
                     const SizedBox(height: 8),
                     const Text('Especialidades:',
                         style: TextStyle(fontWeight: FontWeight.bold)),
-                    Text(doctor.specialty),
+                    Text(widget.doctor.specialty),
                     const SizedBox(height: 8),
-                    Text('Rating: ${doctor.rating}'),
+                    Text('Rating: ${widget.doctor.rating}'),
                   ],
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Center(
-              child: FloatingActionButton.extended(
-                onPressed: () {
-                  //
-                },
-                icon: const Icon(Icons.filter_list),
-                label: const Text('Consultar Disponibilidade'),
-              ),
-            ),
-            const Divider(thickness: 1, color: Colors.black),
             const SizedBox(height: 16),
-            const Text('Avaliações',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            const Text(
+              'Avaliações',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             Expanded(
-              child: ListView(
-                children: [
-                  _buildReviewItem(),
-                  _buildReviewItem(),
-                  _buildReviewItem(),
-                ],
+              child: ListView.builder(
+                itemCount: reviews.length,
+                itemBuilder: (context, index) {
+                  return _buildReviewItem(reviews[index]);
+                },
               ),
             ),
           ],
@@ -73,10 +105,12 @@ class DoctorInfo extends StatelessWidget {
     );
   }
 
-  Widget _buildReviewItem() {
+  Widget _buildReviewItem(UserReview review) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 16.0),
       child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start, // Ensure text starts from the left
         children: [
           Row(
             children: [
@@ -87,20 +121,22 @@ class DoctorInfo extends StatelessWidget {
                 child: const Center(child: Text('[imagem]')),
               ),
               const SizedBox(width: 16),
-              const Column(
+              Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('[Avaliação]',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  Text('[Nome]'),
+                  Text(review.user.name,
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ],
               ),
               const Spacer(),
-              const Text('[Data e Hora]'),
+              Text('${review.reviewDate}'),
             ],
           ),
           const SizedBox(height: 8),
-          const Text('[Comentário]'),
+          Text(
+            review.reviewText,
+            textAlign: TextAlign.left,
+          ),
           const Divider(thickness: 1, color: Colors.grey),
         ],
       ),
