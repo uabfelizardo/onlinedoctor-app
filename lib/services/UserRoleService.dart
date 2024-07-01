@@ -2,9 +2,11 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class UserRoleService {
-  // static const String baseUrl = 'http://localhost:5000';
+  // static const String baseUrl = 'http://localhost:5000'; //Local
+
   static const String baseUrl =
       'https://api-backend-p76c.onrender.com'; //Remote
+
   static Future<List<String>> getUserRoles() async {
     final response = await http.get(Uri.parse('$baseUrl/role'));
 
@@ -20,7 +22,7 @@ class UserRoleService {
   Future<int> getRoleIdByDescription(String description) async {
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/role?description=$description'),
+        Uri.parse('$baseUrl/role/description/$description'),
       );
 
       if (response.statusCode == 200) {

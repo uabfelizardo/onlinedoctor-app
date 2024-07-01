@@ -1,20 +1,33 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import 'package:onlinedoctorapp/styles/colors.dart';
-import 'package:onlinedoctorapp/styles/styles.dart';
+import 'package:onlinedoctorapp/services/DoctorService.dart';
+import 'package:onlinedoctorapp/services/UserService.dart';
+import 'package:onlinedoctorapp/ui/SettingsPage.dart';
 import 'package:onlinedoctorapp/ui/auth/LoginPage.dart';
-import '../services/UserService.dart';
+import 'package:onlinedoctorapp/ui/DashboardPage.dart';
 import '../ui/DoctorDetailsPage.dart';
 import '../ui/ScheduleAppointmentPage.dart';
 import '../ui/UserRegistrationPage.dart';
 import '../ui/DoctorRegistrationPage.dart';
 import '../tabs/ScheduleTab.dart';
+import '../ui/ChatScreen.dart'; // Importe o arquivo ChatScreen.dart
 
 class HomePage extends StatefulWidget {
+  final Uint8List? imgBytes; // Use Uint8List? para aceitar nulos
   final String userName;
   final String userType;
+  final String userID;
+  final String specialty; // Adicionando o parâmetro specialty
 
-  const HomePage({Key? key, required this.userName, required this.userType})
-      : super(key: key);
+  const HomePage({
+    Key? key,
+    this.imgBytes, // Permite que imgBytes seja nulo
+    required this.userName,
+    required this.userType,
+    required this.userID,
+    required this.specialty, // Adicionando o parâmetro specialty
+  }) : super(key: key);
 
   @override
   _HomePageState createState() => _HomePageState();
@@ -29,6 +42,23 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  Future<void> getDoctorAdditionalInformationUserID(String name) async {
+    try {
+      final userID = await DoctorService.getUserIdByDoctorName(name);
+
+      if (userID == null) {
+        throw Exception('User not found');
+      } else {
+        print("UserID : " + userID.toString());
+        final additionalInformation =
+            await DoctorService.getDoctorAdditionalInfoByUserId(userID);
+        print("Adicional do medico : " + additionalInformation.toString());
+      }
+    } catch (e) {
+      print('Failed to get user ID: $e');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     List<Map> navigationBarItems = [
@@ -39,6 +69,8 @@ class _HomePageState extends State<HomePage> {
     List<Widget> screens = [
       HomeTab(
         onPressedScheduleCard: goToSchedule,
+        userType: widget.userType,
+        userName: widget.userName,
       ),
       ScheduleTab(),
     ];
@@ -47,6 +79,19 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('Online Doctor App 👋'),
         backgroundColor: Colors.purple,
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => SettingsPage(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       drawer: Drawer(
         child: ListView(
@@ -88,23 +133,32 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: CircleAvatar(
-                backgroundImage: AssetImage('/onlinedoctor.png'),
+                backgroundImage: widget.imgBytes != null
+                    ? MemoryImage(widget.imgBytes!)
+                    : AssetImage(
+                        '/person.png',
+                      ) as ImageProvider, // Conversão explícita para ImageProvider
               ),
               title: const Text('User details'),
               onTap: () {
                 Navigator.pop(context);
-                if (widget.userType == 'patient') {
+                if ((widget.userType == 'Patient') ||
+                    (widget.userType == 'Admin')) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => UserRegistrationPage(),
+                      builder: (context) => UserRegistrationPage(
+                        userID: widget.userID.toString(),
+                      ),
                     ),
                   );
-                } else if (widget.userType == 'doctor') {
+                } else if (widget.userType == 'Doctor') {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => DoctorRegistrationPage(),
+                      builder: (context) => DoctorRegistrationPage(
+                        userID: widget.userID.toString(),
+                      ),
                     ),
                   );
                 }
@@ -112,7 +166,11 @@ class _HomePageState extends State<HomePage> {
             ),
             ListTile(
               leading: CircleAvatar(
-                backgroundImage: AssetImage('/onlinedoctor.png'),
+                backgroundImage: widget.imgBytes != null
+                    ? MemoryImage(widget.imgBytes!)
+                    : AssetImage(
+                        '/person.png',
+                      ) as ImageProvider, // Conversão explícita para ImageProvider MemoryImage para exibir a imagem a partir dos bytes
               ),
               title: const Text('Logout'),
               onTap: () {
@@ -131,7 +189,7 @@ class _HomePageState extends State<HomePage> {
       body: screens[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         selectedFontSize: 0,
-        selectedItemColor: Color(MyColors.primary),
+        selectedItemColor: Colors.purple,
         showSelectedLabels: false,
         showUnselectedLabels: false,
         items: [
@@ -142,15 +200,15 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   border: Border(
                     top: _selectedIndex == navigationBarItem['index']
-                        ? BorderSide(color: Color(MyColors.bg01), width: 5)
+                        ? BorderSide(color: Colors.purple, width: 5)
                         : BorderSide.none,
                   ),
                 ),
                 child: Icon(
                   navigationBarItem['icon'],
-                  color: _selectedIndex == 0
-                      ? Color(MyColors.bg01)
-                      : Color(MyColors.bg02),
+                  color: _selectedIndex == navigationBarItem['index']
+                      ? Colors.purple
+                      : Colors.grey,
                 ),
               ),
               label: '',
@@ -167,10 +225,14 @@ class _HomePageState extends State<HomePage> {
 
 class HomeTab extends StatefulWidget {
   final void Function() onPressedScheduleCard;
+  final String userType;
+  final String userName;
 
   const HomeTab({
     Key? key,
     required this.onPressedScheduleCard,
+    required this.userType,
+    required this.userName,
   }) : super(key: key);
 
   @override
@@ -185,19 +247,22 @@ class _HomeTabState extends State<HomeTab> {
   @override
   void initState() {
     super.initState();
-    fetchUsers();
+    fetchDoctors();
     searchController.addListener(_filterDoctors);
   }
 
-  Future<void> fetchUsers() async {
+  Future<void> fetchDoctors() async {
     try {
-      final List<dynamic> fetchedDoctors = await UserService.getAllUsers();
+      final List<dynamic> fetchedDoctors = await UserService.getAllDoctors();
       setState(() {
-        doctors = fetchedDoctors;
+        doctors = fetchedDoctors
+            .where((doctor) =>
+                doctor['firstName'] != null && doctor['lastName'] != null)
+            .toList();
         filteredDoctors = fetchedDoctors;
       });
     } catch (error) {
-      print('Error fetching users: $error');
+      print('Error fetching doctors: $error');
     }
   }
 
@@ -205,7 +270,12 @@ class _HomeTabState extends State<HomeTab> {
     String query = searchController.text.toLowerCase();
     setState(() {
       filteredDoctors = doctors.where((doctor) {
-        return doctor['name'].toLowerCase().contains(query);
+        String fullName = doctor['firstName'] + ' ' + doctor['lastName'];
+        String speciality = doctor['speciality'];
+
+        // Verifica se o nome do médico ou a especialidade contêm a consulta
+        return fullName.toLowerCase().contains(query) ||
+            (speciality.toLowerCase().contains(query));
       }).toList();
     });
   }
@@ -219,58 +289,90 @@ class _HomeTabState extends State<HomeTab> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: GestureDetector(
-        onTap: () => FocusScope.of(context).unfocus(),
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: 30),
-          child: ListView(
-            children: [
-              SizedBox(height: 20),
-              SearchInput(controller: searchController),
-              SizedBox(height: 20),
-              Text(
-                'Top Doctor',
-                style: TextStyle(
-                  color: Color(MyColors.header01),
-                  fontWeight: FontWeight.bold,
+    if (widget.userType == 'Patient') {
+      return Scaffold(
+        body: GestureDetector(
+          onTap: () => FocusScope.of(context).unfocus(),
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 30),
+            child: ListView(
+              children: [
+                SizedBox(height: 20),
+                SearchInput(controller: searchController),
+                SizedBox(height: 20),
+                Text(
+                  'Top Doctor',
+                  style: TextStyle(
+                    color: Colors.purple,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              SizedBox(height: 20),
-              filteredDoctors.isNotEmpty
-                  ? ListView.builder(
-                      shrinkWrap: true,
-                      physics: NeverScrollableScrollPhysics(),
-                      itemCount: filteredDoctors.length,
-                      itemBuilder: (BuildContext context, int index) {
-                        return TopDoctorCard(
-                          img: '/onlinedoctor.png',
-                          doctorName: filteredDoctors[index]['name'],
-                          doctorTitle:
-                              filteredDoctors[index]['title'] ?? 'Specialist',
-                        );
-                      },
-                    )
-                  : Center(
-                      child: CircularProgressIndicator(),
-                    ),
-            ],
+                SizedBox(height: 20),
+                filteredDoctors.isNotEmpty
+                    ? ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: filteredDoctors.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          // Verifica se imgBytes é um Uint8List ou uma string e converte se necessário
+                          Uint8List? imgBytes;
+                          if (filteredDoctors[index]['img'] != null) {
+                            if (filteredDoctors[index]['img'] is String) {
+                              imgBytes =
+                                  base64Decode(filteredDoctors[index]['img']);
+                            } else if (filteredDoctors[index]['img']
+                                is Uint8List) {
+                              imgBytes = filteredDoctors[index]['img'];
+                            }
+                          }
+
+                          return TopDoctorCard(
+                            imgBytes: imgBytes ??
+                                Uint8List(
+                                    0), // Garante que imgBytes não seja nulo
+                            doctorName: filteredDoctors[index]['prefix'] +
+                                ' ' +
+                                filteredDoctors[index]['firstName'] +
+                                ' ' +
+                                filteredDoctors[index]['lastName'],
+                            doctorTitle: filteredDoctors[index]['speciality'] ??
+                                'Specialist',
+                            userName: widget.userName,
+                            specialty: filteredDoctors[index]['speciality'],
+                            userID: '',
+                          );
+                        },
+                      )
+                    : Center(
+                        child: CircularProgressIndicator(),
+                      ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      );
+    } else {
+      // Se o usuário não for paciente, exibe o DashboardPage
+      return DashboardPage();
+    }
   }
 }
 
 class TopDoctorCard extends StatelessWidget {
-  final String img;
+  final Uint8List imgBytes;
   final String doctorName;
   final String doctorTitle;
+  final String userName;
+  final String specialty;
+  final String userID; // Adicionando o userID
 
   TopDoctorCard({
-    required this.img,
+    required this.imgBytes,
     required this.doctorName,
     required this.doctorTitle,
+    required this.userName,
+    required this.specialty,
+    required this.userID, // Adicionando o userID
   });
 
   @override
@@ -279,15 +381,17 @@ class TopDoctorCard extends StatelessWidget {
       margin: EdgeInsets.only(bottom: 20),
       child: InkWell(
         onTap: () {
-          _showOptions(context, doctorName, doctorTitle);
+          _showOptions(context, doctorName, doctorTitle, userName, userID);
         },
         child: Row(
           children: [
             Container(
-              color: Color(MyColors.grey01),
+              color: Colors.grey[200],
               child: CircleAvatar(
                 radius: 25,
-                backgroundImage: AssetImage(img),
+                backgroundImage: imgBytes.isNotEmpty
+                    ? MemoryImage(imgBytes)
+                    : AssetImage('assets/person.png') as ImageProvider,
               ),
             ),
             SizedBox(
@@ -299,7 +403,7 @@ class TopDoctorCard extends StatelessWidget {
                 Text(
                   doctorName,
                   style: TextStyle(
-                    color: Color(MyColors.header01),
+                    color: Colors.purple,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -309,22 +413,11 @@ class TopDoctorCard extends StatelessWidget {
                 Text(
                   doctorTitle,
                   style: TextStyle(
-                    color: Color(MyColors.grey02),
+                    color: Colors.grey,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
-                SizedBox(
-                  height: 5,
-                ),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    SizedBox(
-                      width: 5,
-                    ),
-                  ],
-                )
               ],
             )
           ],
@@ -333,8 +426,8 @@ class TopDoctorCard extends StatelessWidget {
     );
   }
 
-  void _showOptions(
-      BuildContext context, String doctorName, String doctorTitle) {
+  void _showOptions(BuildContext context, String doctorName, String doctorTitle,
+      String userName, String userID) {
     showModalBottomSheet(
       context: context,
       builder: (BuildContext context) {
@@ -370,6 +463,8 @@ class TopDoctorCard extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => ScheduleAppointmentPage(
                         doctorName: doctorName,
+                        userName: userName, // Passa o nome do paciente
+                        specialty: specialty, // Passa a especialidade do médico
                       ),
                     ),
                   );
@@ -380,7 +475,14 @@ class TopDoctorCard extends StatelessWidget {
                 title: Text('Chat with doctor'),
                 onTap: () {
                   Navigator.pop(context);
-                  // Navigate to doctor chat page
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ChatScreen(
+                        doctorName: doctorName,
+                      ),
+                    ),
+                  );
                 },
               ),
             ],
@@ -404,7 +506,7 @@ class SearchInput extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Color(MyColors.bg),
+        color: Colors.grey[200],
         borderRadius: BorderRadius.circular(5),
       ),
       padding: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
@@ -415,7 +517,7 @@ class SearchInput extends StatelessWidget {
             padding: const EdgeInsets.only(top: 3),
             child: Icon(
               Icons.search,
-              color: Color(MyColors.purple02),
+              color: Colors.purple,
             ),
           ),
           const SizedBox(
@@ -429,7 +531,7 @@ class SearchInput extends StatelessWidget {
                 hintText: 'Search a doctor or health issue',
                 hintStyle: TextStyle(
                   fontSize: 13,
-                  color: Color(MyColors.purple01),
+                  color: Colors.purple,
                   fontWeight: FontWeight.w700,
                 ),
               ),

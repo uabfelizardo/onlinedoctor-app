@@ -1,10 +1,18 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:onlinedoctorapp/services/DoctorService.dart';
-import 'package:onlinedoctorapp/services/UserService.dart'; // Import UserService
+import 'package:onlinedoctorapp/services/UserService.dart';
+import 'package:onlinedoctorapp/ui/HomePage.dart';
 
 class DoctorRegistrationPage extends StatefulWidget {
-  const DoctorRegistrationPage({Key? key}) : super(key: key);
+  const DoctorRegistrationPage({Key? key, required this.userID})
+      : super(key: key);
+
+  final String userID;
 
   @override
   _DoctorRegistrationPageState createState() => _DoctorRegistrationPageState();
@@ -22,15 +30,20 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   final TextEditingController _lastNameController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _dateOfBirthController = TextEditingController();
-  final TextEditingController _specialtyController = TextEditingController();
   final TextEditingController _additionalInfoController =
       TextEditingController();
+  final TextEditingController _prefixController = TextEditingController();
 
   String _selectedGender = 'Male';
-  final List<String> _genders = ['Male', 'Female', 'Other'];
   List<String> _specialties = [];
   String? _selectedSpecialty;
-  int userId = 1; // Replace with the actual user ID
+  String _role = '';
+
+  final List<String> _prefixes = ['Dr.', 'Dra.'];
+  String _selectedPrefix = 'Dr.';
+
+  XFile? _pickedImage;
+  Uint8List? _doctorImageBytes;
 
   @override
   void initState() {
@@ -52,18 +65,29 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
 
   Future<void> _fetchUserData() async {
     try {
-      final userData = await UserService().getUserById(userId);
+      final userData =
+          await UserService().getUserById(int.parse(widget.userID));
       setState(() {
+        _prefixController.text = userData['prefix'] ?? 'Dr.';
         _firstNameController.text = userData['firstName'] ?? '';
         _lastNameController.text = userData['lastName'] ?? '';
-        _usernameController.text = userData['name'] ?? '';
+        _usernameController.text = userData['username'] ?? '';
         _emailController.text = userData['email'] ?? '';
         _contactController.text = userData['contact'] ?? '';
         _addressController.text = userData['address'] ?? '';
         _dateOfBirthController.text = userData['birthdate'] ?? '';
         _selectedGender = userData['gender'] ?? 'Male';
-        _selectedSpecialty = userData['specialty'] ?? _specialties.first;
+        _passwordController.text = userData['password'] ?? '';
+        _confirmPasswordController.text = userData['password'] ?? '';
+        _selectedSpecialty = userData['speciality'] ?? _specialties.first;
         _additionalInfoController.text = userData['additionalInfomation'] ?? '';
+        // _doctorImageURL = userData['img'];
+        _role = userData['role'] ?? '';
+
+        // Decodificar a imagem base64
+        if (userData['img'] != null) {
+          _doctorImageBytes = base64Decode(userData['img'].split(',').last);
+        }
       });
     } catch (error) {
       print('Failed to load user data: $error');
@@ -73,25 +97,176 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
   Future<void> _updateUserData() async {
     if (_formKey.currentState!.validate()) {
       try {
+        // Converter a imagem para bytes
+        List<int> imageBytes = [];
+        if (_pickedImage != null) {
+          imageBytes = await _pickedImage!.readAsBytes();
+        }
+
         Map<String, dynamic> userData = {
-          'name': _usernameController.text,
+          'prefix': _selectedPrefix,
+          'firstName': _firstNameController.text,
+          'lastName': _lastNameController.text,
+          'username': _usernameController.text,
           'gender': _selectedGender,
           'birthdate': _dateOfBirthController.text,
           'email': _emailController.text,
           'password': _passwordController.text,
-          'numeroutent': "123",
-          'img': _dateOfBirthController.text,
+          'contact': _contactController.text,
+          'address': _addressController.text,
+          'speciality': _selectedSpecialty,
+          'img': imageBytes, // Grava a imagem como bytes
         };
 
-        await UserService().updateUser(userId, userData);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('User updated successfully')),
+        await UserService().updateUser(int.parse(widget.userID), userData);
+
+        // Após atualizar os dados do usuário, chame a função para adicionar informações adicionais e especialidade
+        await addAdditionalInformation();
+        await addSpeciality();
+
+        // Se tudo ocorrer bem, redirecione para a página inicial
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              userName: _prefixController.text +
+                  ' ' +
+                  _firstNameController.text +
+                  ' ' +
+                  _lastNameController.text,
+              userType: _role,
+              userID: widget.userID.toString(),
+              specialty: '',
+            ),
+          ),
         );
       } catch (error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Failed to update user: $error')),
         );
       }
+    }
+  }
+
+  Future<void> addAdditionalInformation() async {
+    try {
+      // Adiciona a informação adicional do médico
+      final doctorInformationResponse =
+          await DoctorService.addDoctorInformation({
+        'additionalInformation': _additionalInfoController.text,
+        'user_id': int.parse(widget.userID),
+      });
+
+      if (doctorInformationResponse != null) {
+        print('Doctor information saved successfully');
+        // Mostra um SnackBar de sucesso
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Doctor information saved successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+
+        // Redireciona para a página de login ou outra ação
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => HomePage(
+              userName: _prefixController.text +
+                  ' ' +
+                  _firstNameController.text +
+                  ' ' +
+                  _lastNameController.text,
+              userType: _role,
+              userID: widget.userID.toString(),
+              specialty: '',
+            ),
+          ),
+        );
+      } else {
+        print('Failed to save doctor information');
+        throw Exception('Failed to save doctor information');
+      }
+    } catch (e, stackTrace) {
+      print('Failed to add additional information: $e');
+      print(stackTrace);
+      // Mostra um SnackBar de falha
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('Failed to add additional information'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> addSpeciality() async {
+    try {
+      // Obtém o ID da especialidade selecionada na dropdownlist
+      final specialtyDescription = _selectedSpecialty;
+      final specialtyId = await DoctorService.getSpecialityIdByDescription(
+          specialtyDescription!);
+
+      if (specialtyId == null) {
+        throw Exception('Speciality not found');
+      }
+
+      // Cria a associação doctorSpeciality
+      final specialityResponse = await DoctorService.addDoctorSpeciality({
+        'date': DateTime.now().toString(),
+        'user_id': int.parse(widget.userID),
+        'speciality_id': specialtyId,
+      });
+
+      // Verifica se a associação foi criada com sucesso
+      if (specialityResponse != null) {
+        print('DoctorSpeciality saved successfully');
+        // Adiciona a informação adicional do médico
+        final doctorInformationResponse =
+            await DoctorService.addDoctorInformation({
+          'additionalInformation': _additionalInfoController.text,
+          'user_id': int.parse(widget.userID),
+        });
+
+        if (doctorInformationResponse != null) {
+          print('Doctor information saved successfully');
+          // Redireciona para a página de login ou outra ação
+          // MaterialPageRoute(
+          //   builder: (context) => HomePage(
+          //     userName:
+          //         '${_prefixController.text} ${_firstNameController.text} ${_lastNameController.text}',
+          //     userType: _role,
+          //     userID: widget.userID.toString(),
+          //     specialty: '',
+          //   ),
+          // );
+        } else {
+          throw Exception('Failed to save doctor information');
+        }
+      } else {
+        throw Exception('Failed to save DoctorSpeciality');
+      }
+    } catch (e) {
+      print('Failed to add speciality: $e');
+      // Mostra um SnackBar de falha com mensagem de erro
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to add speciality: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickImage() async {
+    final pickedImage = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+    );
+
+    if (pickedImage != null) {
+      setState(() {
+        _pickedImage = pickedImage;
+      });
     }
   }
 
@@ -131,35 +306,96 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      const SizedBox(
-                        height: 20,
+                      const SizedBox(height: 20),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[300],
+                            borderRadius: BorderRadius.circular(60),
+                          ),
+                          child: _doctorImageBytes != null
+                              ? ClipOval(
+                                  child: Image.memory(
+                                    _doctorImageBytes!,
+                                    fit: BoxFit.cover,
+                                    width: 120,
+                                    height: 120,
+                                  ),
+                                )
+                              : Icon(Icons.camera_alt, size: 60),
+                        ),
                       ),
+                      const SizedBox(height: 20),
                       Text(
                         "Create your doctor account",
                         style: TextStyle(fontSize: 15, color: Colors.grey[700]),
-                      )
+                      ),
                     ],
                   ),
                   Column(
                     children: <Widget>[
-                      TextFormField(
-                        controller: _firstNameController,
-                        decoration: InputDecoration(
-                          hintText: "First Name",
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(18),
-                            borderSide: BorderSide.none,
+                      const SizedBox(height: 20),
+                      Row(
+                        children: [
+                          Container(
+                            width: 100,
+                            child: DropdownButtonFormField<String>(
+                              decoration: InputDecoration(
+                                fillColor: Colors.purple.withOpacity(0.1),
+                                filled: true,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  borderSide: BorderSide.none,
+                                ),
+                                prefixIcon: const Icon(Icons.title),
+                              ),
+                              value: _selectedPrefix,
+                              hint: const Text("Select Prefix"),
+                              items: _prefixes.map((String prefix) {
+                                return DropdownMenuItem<String>(
+                                  value: prefix,
+                                  child: Text(prefix),
+                                );
+                              }).toList(),
+                              onChanged: (newValue) {
+                                setState(() {
+                                  _selectedPrefix = newValue!;
+                                });
+                              },
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please select a prefix';
+                                }
+                                return null;
+                              },
+                            ),
                           ),
-                          fillColor: Colors.purple.withOpacity(0.1),
-                          filled: true,
-                          prefixIcon: const Icon(Icons.person),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please enter your first name';
-                          }
-                          return null;
-                        },
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: TextFormField(
+                              controller: _firstNameController,
+                              decoration: InputDecoration(
+                                hintText: "First Name",
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(18),
+                                  borderSide: BorderSide.none,
+                                ),
+                                fillColor: Colors.purple.withOpacity(0.1),
+                                filled: true,
+                                prefixIcon: const Icon(Icons.person),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Please enter your first name';
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 20),
                       TextFormField(
@@ -385,12 +621,6 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                           prefixIcon: const Icon(Icons.info),
                         ),
                         maxLines: 3,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Please provide additional information';
-                          }
-                          return null;
-                        },
                       ),
                     ],
                   ),
@@ -400,7 +630,7 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
                       onPressed: _updateUserData,
                       child: const Text(
                         "Submit",
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(fontSize: 20, color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
                         shape: const StadiumBorder(),
@@ -417,8 +647,4 @@ class _DoctorRegistrationPageState extends State<DoctorRegistrationPage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(const DoctorRegistrationPage());
 }

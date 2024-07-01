@@ -1,17 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:onlinedoctorapp/styles/colors.dart';
-import 'package:onlinedoctorapp/styles/styles.dart';
 import 'package:onlinedoctorapp/ui/auth/LoginPage.dart';
 import '../services/UserService.dart';
 import '../ui/DoctorDetailsPage.dart';
 import '../ui/ScheduleAppointmentPage.dart';
-import '../ui/UserRegistrationPage.dart';
-import '../ui/DoctorRegistrationPage.dart';
+// import '../ui/UserRegistrationPage.dart';
+// import '../ui/DoctorRegistrationPage.dart';
 
 class HomePage extends StatelessWidget {
   final String userName;
 
-  const HomePage({Key? key, required this.userName}) : super(key: key);
+  const HomePage(
+      {Key? key,
+      required this.userName,
+      required String userType,
+      required String userID,
+      required String specialty})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +30,7 @@ class HomePage extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: Colors.purple,
               ),
               child: Column(
@@ -41,7 +46,7 @@ class HomePage extends StatelessWidget {
                   const SizedBox(height: 8),
                   Text(
                     userName,
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 18,
                     ),
@@ -50,23 +55,23 @@ class HomePage extends StatelessWidget {
               ),
             ),
             ListTile(
-              leading: CircleAvatar(
-                backgroundImage: AssetImage('/onlinedoctor.png'),
+              leading: const CircleAvatar(
+                backgroundImage: AssetImage('/person.png'),
               ),
               title: const Text('User details'),
               onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => UserRegistrationPage(),
-                  ),
-                );
+                // Navigator.pop(context);
+                // Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => UserRegistrationPage(userID: widget.userID.toString()),
+                //   ),
+                // );
               },
             ),
             ListTile(
-              leading: CircleAvatar(
-                backgroundImage: AssetImage('/onlinedoctor.png'),
+              leading: const CircleAvatar(
+                backgroundImage: AssetImage('/person.png'),
               ),
               title: const Text('Logout'),
               onTap: () {
@@ -129,7 +134,7 @@ class _HomeTabState extends State<HomeTab> {
     String query = searchController.text.toLowerCase();
     setState(() {
       filteredDoctors = doctors.where((doctor) {
-        return doctor['name'].toLowerCase().contains(query);
+        return doctor['username'].toLowerCase().contains(query);
       }).toList();
     });
   }
@@ -168,8 +173,8 @@ class _HomeTabState extends State<HomeTab> {
                       itemCount: filteredDoctors.length,
                       itemBuilder: (BuildContext context, int index) {
                         return TopDoctorCard(
-                          img: '/onlinedoctor.png',
-                          doctorName: filteredDoctors[index]['name'],
+                          img: '/person.png',
+                          doctorName: filteredDoctors[index]['username'],
                           doctorTitle:
                               filteredDoctors[index]['title'] ?? 'Specialist',
                         );
@@ -303,6 +308,8 @@ class TopDoctorCard extends StatelessWidget {
                     MaterialPageRoute(
                       builder: (context) => ScheduleAppointmentPage(
                         doctorName: doctorName,
+                        userName: '',
+                        specialty: '',
                       ),
                     ),
                   );

@@ -13,49 +13,49 @@ enum FilterStatus { Upcoming, Complete, Cancel }
 
 List<Map> schedules = [
   {
-    'img': '/onlinedoctor.png',
+    'img': '/person.png',
     'doctorName': 'Dr. Ornelo',
-    'doctorTitle': 'Dental Specialist',
+    'doctorTitle': 'Allergy and Immunology Specialist',
     'reservedDate': 'Monday, Aug 29',
     'reservedTime': '11:00 - 12:00',
     'status': FilterStatus.Upcoming
   },
   {
-    'img': '/onlinedoctor.png',
+    'img': '/person.png',
     'doctorName': 'Dr. Ines',
-    'doctorTitle': 'Skin Specialist',
+    'doctorTitle': 'Cardiology Specialist',
     'reservedDate': 'Monday, Sep 29',
     'reservedTime': '11:00 - 12:00',
     'status': FilterStatus.Upcoming
   },
   {
-    'img': '/onlinedoctor.png',
+    'img': '/person.png',
     'doctorName': 'Dr. Yolanda',
-    'doctorTitle': 'General Specialist',
+    'doctorTitle': 'Neurology Specialist',
     'reservedDate': 'Monday, Jul 29',
     'reservedTime': '11:00 - 12:00',
     'status': FilterStatus.Upcoming
   },
   {
-    'img': '/onlinedoctor.png',
+    'img': '/person.png',
     'doctorName': 'Dr. Ines',
-    'doctorTitle': 'Something Specialist',
+    'doctorTitle': 'Cardiology Specialist',
     'reservedDate': 'Monday, Jul 29',
     'reservedTime': '11:00 - 12:00',
     'status': FilterStatus.Complete
   },
   {
-    'img': '/onlinedoctor.png',
+    'img': '/person.png',
     'doctorName': 'Dr. Ornelo',
-    'doctorTitle': 'Other Specialist',
+    'doctorTitle': 'Allergy and Immunology Specialist',
     'reservedDate': 'Monday, Jul 29',
     'reservedTime': '11:00 - 12:00',
     'status': FilterStatus.Cancel
   },
   {
-    'img': '/onlinedoctor.png',
+    'img': '/person.png',
     'doctorName': 'Dr. Ines',
-    'doctorTitle': 'Other Specialist',
+    'doctorTitle': 'Cardiology Specialist',
     'reservedDate': 'Monday, Jul 29',
     'reservedTime': '11:00 - 12:00',
     'status': FilterStatus.Cancel

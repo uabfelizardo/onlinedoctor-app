@@ -20,14 +20,14 @@ class DoctorDescription extends StatelessWidget {
         children: [
           Text(
             "doctorInformationModel.title",
-            style: Theme.of(context).textTheme.headline2,
+            style: Theme.of(context).textTheme.titleSmall,
           ),
           SizedBox(height: 10),
           Row(
             children: [
               Text.rich(
                 TextSpan(
-                  style: Theme.of(context).textTheme.headline5,
+                  style: Theme.of(context).textTheme.titleSmall,
                   children: [
                     TextSpan(text: "doctorInformationModel.specialist"),
                     const TextSpan(text: '  •  '),
@@ -70,7 +70,7 @@ class DoctorDescription extends StatelessWidget {
                       "AppText.makeAppointment",
                       style: Theme.of(context)
                           .textTheme
-                          .headline5!
+                          .titleSmall!
                           .copyWith(color: Colors.white),
                     ),
                   ),

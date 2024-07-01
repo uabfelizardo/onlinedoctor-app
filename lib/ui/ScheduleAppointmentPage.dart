@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'ConfirmAppointmentPage.dart';
-import 'package:onlinedoctorapp/services/DoctorService.dart';
 
 class ScheduleAppointmentPage extends StatefulWidget {
   final String doctorName;
+  final String userName;
+  final String specialty;
 
-  ScheduleAppointmentPage({required this.doctorName});
+  ScheduleAppointmentPage({
+    required this.doctorName,
+    required this.userName,
+    required this.specialty,
+  });
 
   @override
   _ScheduleAppointmentPageState createState() =>
@@ -14,11 +19,9 @@ class ScheduleAppointmentPage extends StatefulWidget {
 }
 
 class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
-  List<String> specialities = ['Cardiology', 'Dermatology', 'Pediatrics'];
-  String selectedSpeciality = 'Cardiology'; // Default selected specialty
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
-  String selectedDoctor = ''; // Variable to store selected doctor
+  TextEditingController observationController = TextEditingController();
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -50,7 +53,6 @@ class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
   Widget build(BuildContext context) {
     String formattedDate = DateFormat.yMMMd().format(selectedDate);
     String formattedTime = selectedTime.format(context);
-    selectedDoctor = widget.doctorName; // Set selected doctor name
 
     return Scaffold(
       appBar: AppBar(
@@ -68,34 +70,7 @@ class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(
-              'Specialty:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            DropdownButtonFormField(
-              decoration: InputDecoration(
-                hintText: "Specialty",
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-                fillColor: Colors.purple.withOpacity(0.1),
-                filled: true,
-                prefixIcon: const Icon(Icons.local_hospital),
-              ),
-              value: selectedSpeciality,
-              items: specialities.map((String speciality) {
-                return DropdownMenuItem(
-                  value: speciality,
-                  child: Text(speciality),
-                );
-              }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  selectedSpeciality = value.toString();
-                });
-              },
-            ),
+            _buildInfoCard('Specialty', widget.specialty),
             SizedBox(height: 20),
             _buildDateTimeField(
               context: context,
@@ -117,23 +92,11 @@ class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
               },
             ),
             SizedBox(height: 20),
-            Text(
-              'Doctor:',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-            TextFormField(
-              decoration: InputDecoration(
-                hintText: selectedDoctor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(18),
-                  borderSide: BorderSide.none,
-                ),
-                fillColor: Colors.purple.withOpacity(0.1),
-                filled: true,
-                prefixIcon: const Icon(Icons.person),
-              ),
-              readOnly: true,
-            ),
+            _buildInfoCard('Doctor', widget.doctorName),
+            SizedBox(height: 20),
+            _buildInfoCard('Patient', widget.userName),
+            SizedBox(height: 20),
+            _buildObservationField(),
             SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
@@ -141,10 +104,13 @@ class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
                   context,
                   MaterialPageRoute(
                     builder: (context) => ConfirmAppointmentPage(
-                      doctorName: selectedDoctor,
-                      speciality: selectedSpeciality,
+                      doctorName: widget.doctorName,
+                      speciality: widget.specialty,
                       date: formattedDate,
                       time: formattedTime,
+                      userName: widget.userName,
+                      observation: observationController.text,
+                      appointmentId: 123,
                     ),
                   ),
                 );
@@ -152,7 +118,14 @@ class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text('Continue'),
+                  Text(
+                    'Continue',
+                    style: TextStyle(
+                      color: Colors.white, // Cor branca para o texto
+                      fontSize:
+                          16, // Tamanho da fonte (ajuste conforme necessário)
+                    ),
+                  ),
                   Icon(Icons.arrow_forward),
                 ],
               ),
@@ -189,6 +162,48 @@ class _ScheduleAppointmentPageState extends State<ScheduleAppointmentPage> {
       ),
       readOnly: true,
       onTap: onTap,
+    );
+  }
+
+  Widget _buildInfoCard(String title, String info) {
+    return Card(
+      elevation: 4.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '$title:',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            Text(
+              info,
+              style: TextStyle(fontSize: 16, color: Colors.grey[700]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildObservationField() {
+    return TextFormField(
+      controller: observationController,
+      maxLines: 4,
+      decoration: InputDecoration(
+        hintText: 'Observations',
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(18),
+          borderSide: BorderSide.none,
+        ),
+        fillColor: Colors.purple.withOpacity(0.1),
+        filled: true,
+      ),
     );
   }
 }

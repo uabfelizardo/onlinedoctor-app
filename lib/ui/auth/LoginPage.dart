@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:onlinedoctorapp/services/LoginService.dart';
 import 'SignupPage.dart';
@@ -21,16 +22,39 @@ class _LoginPageState extends State<LoginPage> {
       handleLoginResult(context, user);
     } catch (error) {
       print('Error during login: $error');
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Login Failed'),
+          content: const Text('An error occurred during login.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
     }
   }
 
   void handleLoginResult(BuildContext context, Map<String, dynamic>? user) {
-    if (user != null && user.containsKey('name')) {
+    if (user != null && user.containsKey('username')) {
+      Uint8List? userImageBytes = user['img'] is Uint8List ? user['img'] : null;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (context) =>
-              HomePage(userName: user['name'], userType: 'doctor'),
+          builder: (context) => HomePage(
+            userName: user['prefix'] +
+                ' ' +
+                user['firstName'] +
+                ' ' +
+                user['lastName'],
+            userType: user['role'],
+            userID: user['id'].toString(),
+            specialty: '',
+            imgBytes: userImageBytes,
+          ),
         ),
       );
     } else {
@@ -127,7 +151,9 @@ class _LoginPageState extends State<LoginPage> {
           ),
           child: const Text(
             "Login",
-            style: TextStyle(fontSize: 20),
+            style: TextStyle(
+                fontSize: 20,
+                color: Colors.white), // Define a cor do texto como branca
           ),
         )
       ],

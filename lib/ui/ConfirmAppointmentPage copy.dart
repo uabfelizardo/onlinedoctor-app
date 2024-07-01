@@ -92,6 +92,7 @@ class _ConfirmAppointmentPageState extends State<ConfirmAppointmentPage> {
     try {
       final doctorService = DoctorService();
 
+      // ---------------------
       // 1. Fetch the doctor who will conduct the consultation
       List<String> doctorNamesParts = widget.doctorName.split(' ');
       String doctorName =
@@ -100,18 +101,20 @@ class _ConfirmAppointmentPageState extends State<ConfirmAppointmentPage> {
           await doctorService.getDoctorUserIdByName(doctorName.toString());
 
       // 2. Fetch the user who will attend the consultation
-      List<String> patientNamesParts = widget.userName.split(' ');
+      List<String> patintNamesParts = widget.doctorName.split(' ');
       String patientName =
-          patientNamesParts.length > 2 ? patientNamesParts[1] : '';
+          patintNamesParts.length > 2 ? patintNamesParts[1] : '';
       final patientId =
-          await doctorService.getPatientIdByFirstName(patientName.toString());
+          await doctorService.getDoctorUserIdByName(patientName.toString());
 
       if (doctorId == null || patientId == null) {
         throw Exception('Doctor or Patient ID not found');
       }
 
       // Convert the date String to DateTime
-      DateTime appointmentDate = DateFormat('MMM dd, yyyy').parse(widget.date);
+      DateTime appointmentDate = DateFormat('MMM dd, yyyy').parse(
+          widget.date); // Assuming widget.date is in the format "yyyy-MM-dd"
+      //----------------------
 
       // Build the Appointment object and send it to the API
       Appointment newAppointment = Appointment(
@@ -123,26 +126,22 @@ class _ConfirmAppointmentPageState extends State<ConfirmAppointmentPage> {
         time: widget.time,
       );
 
-      // Add appointment and get the added appointment with ID
       Appointment addedAppointment =
           await appointmentService.addAppointment(newAppointment);
 
       // Save attached documents
       await _saveDocuments(addedAppointment.id);
 
-      // Show success message
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Appointment scheduled successfully.'),
         ),
       );
 
-      // Delay for a short while to allow the SnackBar to be displayed
+      // Wait for the snack bar to be displayed before navigating
       await Future.delayed(Duration(seconds: 2));
 
-      // Navigate to AppointmentDetailsPage
-      Navigator.pushReplacement(
-        // Use pushReplacement instead of push
+      Navigator.push(
         context,
         MaterialPageRoute(
           builder: (context) => AppointmentDetailsPage(
@@ -210,7 +209,7 @@ class _ConfirmAppointmentPageState extends State<ConfirmAppointmentPage> {
               onPressed: _scheduleAppointment,
               style: ElevatedButton.styleFrom(
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                backgroundColor: Colors.white,
+                backgroundColor: Colors.purple,
               ),
               child: Text('Schedule Appointment'),
             ),
@@ -240,7 +239,7 @@ class _ConfirmAppointmentPageState extends State<ConfirmAppointmentPage> {
   Widget _buildDoctorInfo() {
     return ListTile(
       leading: CircleAvatar(
-        backgroundImage: AssetImage('assets/person.png'),
+        backgroundImage: AssetImage('assets/onlinedoctor.png'),
       ),
       title: Text(widget.doctorName),
       subtitle: Text(widget.speciality),

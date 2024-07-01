@@ -1,16 +1,22 @@
 import 'package:flutter/material.dart';
 
 class AppointmentDetailsPage extends StatelessWidget {
+  final String doctorName;
   final String speciality;
   final String date;
   final String time;
-  final String doctorName;
+  final String userName;
+  final String observation;
+  final int appointmentId; // Adiciona appointmentId aqui
 
   AppointmentDetailsPage({
+    required this.doctorName,
     required this.speciality,
     required this.date,
     required this.time,
-    required this.doctorName,
+    required this.userName,
+    required this.observation,
+    required this.appointmentId, // Certifique-se de que o parâmetro seja requerido
   });
 
   @override
@@ -58,14 +64,14 @@ class AppointmentDetailsPage extends StatelessWidget {
             SizedBox(height: 20),
             ListTile(
               leading: CircleAvatar(
-                backgroundImage: AssetImage('assets/doctor.jpg'),
+                backgroundImage: AssetImage('assets/onlinedoctor.png'),
               ),
               title: Text('Dr. $doctorName'),
               subtitle: Text('Médico'),
             ),
             ListTile(
               leading: CircleAvatar(
-                backgroundImage: AssetImage('assets/patient.jpg'),
+                backgroundImage: AssetImage('assets/onlinedoctor.png'),
               ),
               title: Text('Frandle'),
               subtitle: Text('Paciente'),

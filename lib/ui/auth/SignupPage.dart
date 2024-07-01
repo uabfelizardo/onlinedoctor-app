@@ -1,11 +1,7 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'package:flutter/material.dart';
-import 'package:onlinedoctorapp/model/user.dart';
 import 'package:onlinedoctorapp/services/UserService.dart';
 import 'LoginPage.dart';
 import 'package:onlinedoctorapp/services/UserRoleService.dart';
-import 'package:onlinedoctorapp/services/DoctorService.dart';
 
 class SignupPage extends StatefulWidget {
   const SignupPage({super.key});
@@ -16,25 +12,21 @@ class SignupPage extends StatefulWidget {
 
 class _SignupPageState extends State<SignupPage> {
   final _formKey = GlobalKey<FormState>();
-  String _selectedUserType = 'Patient'; // Definir como 'Patient' por padrão
+  String _selectedUserType = 'Patient'; // Default to 'Patient'
   String _selectedGender = 'Male';
-  List<String> _userTypes = []; // Inicializa a lista de tipos de usuário vazia
-  List<String> _specialties = []; // Inicializa a lista de especialidades vazia
-  String?
-      _selectedSpecialty; // Inicializa a especialidade selecionada como nula
+  List<String> _userTypes = []; // Initialize empty user types list
   final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _contactController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
-  DateTime _currentDtaeTime = DateTime.now();
+  DateTime _currentDateTime = DateTime.now();
 
   @override
   void initState() {
     super.initState();
-    _fetchUserRoles(); // Chama o método para buscar os tipos de usuário
-    _fetchUserSpecialties(); // Chama o método para buscar as especialidades
+    _fetchUserRoles(); // Fetch user roles
   }
 
   Future<void> _fetchUserRoles() async {
@@ -44,45 +36,40 @@ class _SignupPageState extends State<SignupPage> {
         _userTypes = roles;
       });
     } catch (error) {
-      print('Failed to load user roles: $error');
-    }
-  }
-
-  Future<void> _fetchUserSpecialties() async {
-    try {
-      final specialties = await DoctorService.geDoctorSpecialties();
-      setState(() {
-        _specialties = specialties;
-      });
-    } catch (error) {
-      print('Failed to load user specialties: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to load user roles: $error')),
+      );
     }
   }
 
   Future<void> saveUser() async {
     try {
-      final userService = UserService(); // Instância do UserService
-      final userRoleService = UserRoleService(); // Instância do UserService
+      final userService = UserService(); // UserService instance
+      final userRoleService = UserRoleService(); // UserRoleService instance
       final response = await userService.addUser({
-        'name': _usernameController.text,
-        'gender': _selectedGender.toString(),
+        'username': _usernameController.text,
+        'gender': _selectedGender,
         'email': _emailController.text,
+        'contact': _contactController.text,
         'password': _passwordController.text,
-        'createdAt': _currentDtaeTime.toString(),
+        'role': _selectedUserType,
+        'createdAt': _currentDateTime.toString(),
+        'prefix': '.',
+        'firstName': _usernameController.text,
+        'lastName': _usernameController.text,
+        'birthdate': '0000:00:00',
+        'address': _emailController.text,
+        'state': 'Disabled',
+        'img': '',
       });
-      // Verifica a resposta
+
       if (response != null) {
         print('User saved successfully');
-
-        // Obtém o ID do usuário recém-criado
         final userId = response['id'];
-
-        // Obtém o ID do role selecionado na dropdownlist
         final roleDescription = _selectedUserType;
         final roleId =
             await userRoleService.getRoleIdByDescription(roleDescription);
 
-        // Cria a associação userrole
         final roleResponse = await userRoleService.addUserRole({
           'date': DateTime.now().toString(),
           'user_id': userId,
@@ -90,7 +77,11 @@ class _SignupPageState extends State<SignupPage> {
         });
 
         if (roleResponse != null) {
-          print('UserRole saved successfully');
+          print('User Role saved successfully');
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => LoginPage()),
+          );
         } else {
           throw Exception('Failed to save UserRole');
         }
@@ -98,7 +89,9 @@ class _SignupPageState extends State<SignupPage> {
         throw Exception('Failed to save user');
       }
     } catch (error) {
-      throw Exception('Failed to save user: $error');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save user: $error')),
+      );
     }
   }
 
@@ -140,7 +133,7 @@ class _SignupPageState extends State<SignupPage> {
                       TextFormField(
                         controller: _usernameController,
                         decoration: InputDecoration(
-                          hintText: "Name",
+                          hintText: "Username",
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(18),
                             borderSide: BorderSide.none,
@@ -151,7 +144,7 @@ class _SignupPageState extends State<SignupPage> {
                         ),
                         validator: (value) {
                           if (value == null || value.isEmpty) {
-                            return 'Please enter your name';
+                            return 'Please enter your username';
                           }
                           return null;
                         },
@@ -221,10 +214,6 @@ class _SignupPageState extends State<SignupPage> {
                         onChanged: (newValue) {
                           setState(() {
                             _selectedUserType = newValue!;
-                            if (_selectedUserType != 'Doctor') {
-                              _selectedSpecialty =
-                                  null; // Limpa a especialidade se não for 'Doctor'
-                            }
                           });
                         },
                         validator: (value) {
@@ -234,39 +223,6 @@ class _SignupPageState extends State<SignupPage> {
                           return null;
                         },
                       ),
-                      const SizedBox(height: 20),
-                      if (_selectedUserType == 'Doctor')
-                        DropdownButtonFormField<String>(
-                          decoration: InputDecoration(
-                            fillColor: Colors.purple.withOpacity(0.1),
-                            filled: true,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(18),
-                              borderSide: BorderSide.none,
-                            ),
-                            prefixIcon: const Icon(Icons.local_hospital),
-                          ),
-                          value: _selectedSpecialty,
-                          hint: const Text("Select specialty"),
-                          items: _specialties.map((String specialty) {
-                            return DropdownMenuItem<String>(
-                              value: specialty,
-                              child: Text(specialty),
-                            );
-                          }).toList(),
-                          onChanged: (newValue) {
-                            setState(() {
-                              _selectedSpecialty = newValue!;
-                            });
-                          },
-                          validator: (value) {
-                            if (_selectedUserType == 'Doctor' &&
-                                value == null) {
-                              return 'Please select a specialty';
-                            }
-                            return null;
-                          },
-                        ),
                       const SizedBox(height: 20),
                       Row(
                         children: <Widget>[
@@ -359,7 +315,7 @@ class _SignupPageState extends State<SignupPage> {
                       },
                       child: const Text(
                         "Sign up",
-                        style: TextStyle(fontSize: 20),
+                        style: TextStyle(fontSize: 20, color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
                         shape: const StadiumBorder(),
@@ -396,7 +352,7 @@ class _SignupPageState extends State<SignupPage> {
                             width: 30.0,
                             decoration: const BoxDecoration(
                               image: DecorationImage(
-                                image: AssetImage('/onlinedoctor.png'),
+                                image: AssetImage('/person.png'),
                                 fit: BoxFit.cover,
                               ),
                               shape: BoxShape.circle,
